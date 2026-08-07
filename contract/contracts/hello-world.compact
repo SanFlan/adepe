@@ -1,0 +1,106 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+import "schnorr" prefix Schnorr_;
+
+export enum BoolRestrictions {
+  NIVOLUMAB_COUNTER_INDICATION,
+  IPILINUMAB_COUNTER_INDICATION,
+  ACTIVE_AUTOIMMUNE_DISEASE,
+  CHEMOTHERAPY,
+  IMMUNOTHERAPY
+}
+
+export enum MinMaxRestrictions {
+  AGE,
+}
+
+struct MedicalHistory {
+    age: Uint<16>;
+    nivolumab_counterindication: Boolean;
+    ipilinumab_counterindication: Boolean;
+    active_autoimmune_therapy: Boolean;
+    chemotherapy: Boolean;
+    immunotherapy: Boolean;
+}
+
+new type UserPublicKey = Bytes<32>;
+new type UserSecretKey = Bytes<32>;
+new type AdminPublicKey = Bytes<32>;
+
+export ledger TrialBoolRestrictions: Map<Uint<32>, Map<BoolRestrictions, Boolean>>;
+export ledger TrialMinMaxRestrictions: Map<Uint<32>, Map<MinMaxRestrictions, [Uint<32>, Uint<32>]>>;
+export ledger ElegiblePeople: Map<Uint<32>, Set<UserPublicKey>>;
+
+export ledger contractAdmin: AdminPublicKey;
+export ledger providers: Set<JubjubPoint>;
+
+witness getUserSecret(): UserSecretKey;
+witness getWitnessMedicalHistory(): [MedicalHistory, Schnorr_SchnorrSignature, JubjubPoint];
+
+pure circuit publicKey(_sk: UserSecretKey): UserPublicKey {
+  const hash = persistentHash<[Bytes<32>,UserSecretKey]>([
+    pad(32, "midnight:auth:pk"),
+    _sk
+  ]) as UserPublicKey;
+  return hash;
+}
+
+export pure circuit deriveAdminPublicKey(sk: UserSecretKey): AdminPublicKey {
+  return persistentHash<[Bytes<18>, UserSecretKey]>([
+    "zkloan:admin:pk:v1",
+    sk
+  ]) as AdminPublicKey;
+}
+
+constructor() {
+  contractAdmin = disclose(deriveAdminPublicKey(getUserSecret()));
+}
+
+export circuit registerProvider(providerPk: JubjubPoint): [] {
+    assert(contractAdmin == deriveAdminPublicKey(getUserSecret()), "Only admin can register providers");
+    providers.insert(disclose(providerPk));
+}
+
+export circuit removeProvider(providerPk: JubjubPoint): [] {
+    assert(contractAdmin == deriveAdminPublicKey(getUserSecret()), "Only admin can remove providers");
+    assert(providers.member(disclose(providerPk)), "Provider not found");
+    providers.remove(disclose(providerPk));
+}
+
+export circuit Verify(trialID: Uint<32>) : [] {
+  
+  const [MedicalHistory, signature, providerPk] = getWitnessMedicalHistory();
+  const msg: Vector<6, Field> = [
+    MedicalHistory.nivolumab_counterindication as Field,
+    MedicalHistory.ipilinumab_counterindication as Field,
+    MedicalHistory.active_autoimmune_therapy as Field,
+    MedicalHistory.chemotherapy as Field,
+    MedicalHistory.immunotherapy as Field,
+    MedicalHistory.age as Field
+  ];
+
+  Schnorr_schnorrVerify<6>(msg, signature, providerPk);
+  if (!providers.member(disclose(providerPk))){
+    return;
+  }
+
+  const agemax_bad = MedicalHistory.age > TrialMinMaxRestrictions.lookup(trialID).lookup(MinMaxRestrictions.AGE)[0];
+  const agemin_bad = MedicalHistory.age < TrialMinMaxRestrictions.lookup(trialID).lookup(MinMaxRestrictions.AGE)[1];
+  const nivolumab_bad = MedicalHistory.nivolumab_counterindication != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.NIVOLUMAB_COUNTER_INDICATION);
+  const ipilinumab_bad = MedicalHistory.ipilinumab_counterindication != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.IPILINUMAB_COUNTER_INDICATION);
+  const autoimmune_bad = MedicalHistory.active_autoimmune_therapy != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.ACTIVE_AUTOIMMUNE_DISEASE);
+  const chemo_bad = MedicalHistory.chemotherapy != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.CHEMOTHERAPY);
+  const immune_bad = MedicalHistory.immunotherapy != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.IMMUNOTHERAPY);
+  
+  const ret = agemax_bad||agemin_bad||nivolumab_bad||ipilinumab_bad||autoimmune_bad||chemo_bad||immune_bad;
+  if (disclose(ret)) {
+    return;
+  }
+
+  const sk = getUserSecret();
+  const pk = publicKey(sk);
+
+  ElegiblePeople.lookup(trialID).insert(disclose(pk));
+}
