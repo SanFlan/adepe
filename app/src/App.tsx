@@ -197,7 +197,9 @@ export const App = () => {
           [
             ['phone', 'Patient app'],
             ['trials', 'Trials'],
-            ['credential', 'My record'],
+            // Not "My record": the patient-facing version of this is the phone's
+            // passport card, and two pages with that name is what confused people.
+            ['credential', 'Credential'],
             ['clinic', 'Clinic'],
             // Named for what it does rather than who does it: "Issuer" alongside "Clinic"
             // reads as two names for the same thing.

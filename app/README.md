@@ -70,8 +70,10 @@ every other local mode hides.
   same `TrialsProvider` as the desktop Trials tab, so in Local proofs mode that spinner is
   a proof server working, and the enrolment lands in Overview and the ledger drawer. This
   is what the product actually is; everything else here is a control room.
-- **Trials** — the same flow with the criteria evaluation exposed.
-- **My record** — the held document, its signed fields, and the signature.
+- **Trials** — the same flow as full-width rows, with every criterion evaluated and the
+  columns aligned between trials so the catalogue can be compared at a glance.
+- **Credential** — the same credential the phone shows as a passport, with the
+  cryptography exposed: the six values the circuit receives, and the signature over them.
 - **Clinic** — one issuer, the whole patient roster, with per-row attestation status. The
   header's patient switcher does not apply here; a clinic sees everyone.
 - **Record editor** — edit and sign one document at a time, following the header's

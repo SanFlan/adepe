@@ -73,7 +73,7 @@ describe('App', () => {
   it('renders every tab without throwing', async () => {
     await render();
     for (const tab of [
-      'My record',
+      'Credential',
       'Clinic',
       'Record editor',
       'Overview',
@@ -108,8 +108,11 @@ describe('App', () => {
       );
 
     // Marta is treatment-naive at 54: inside HORIZON-1, outside VANGUARD-5's 65+ floor.
-    expect(cardFor('HORIZON-1')?.textContent).toContain('appears eligible');
-    expect(cardFor('VANGUARD-5')?.textContent).toContain('not eligible');
+    // Assert on the pill tone, since "eligible" is a substring of "not eligible".
+    expect(cardFor('HORIZON-1')?.querySelector('.pill.good')?.textContent).toBe('eligible');
+    expect(cardFor('VANGUARD-5')?.querySelector('.pill.bad')?.textContent).toBe(
+      'not eligible',
+    );
 
     const apply = cardFor('HORIZON-1')!.querySelector('button')!;
     await act(async () => {

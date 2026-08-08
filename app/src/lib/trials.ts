@@ -147,6 +147,8 @@ export const trialById = (id: bigint): Trial | undefined =>
 
 export interface CriterionResult {
   readonly label: string;
+  /** Abbreviated label, for compact layouts where six criteria sit side by side. */
+  readonly short: string;
   readonly required: string;
   readonly actual: string;
   readonly pass: boolean;
@@ -167,36 +169,42 @@ export const evaluateEligibility = (
 ): readonly CriterionResult[] => [
   {
     label: 'Age',
+    short: 'Age',
     required: `${criteria.ageMin}–${criteria.ageMax}`,
     actual: String(history.age),
     pass: history.age >= criteria.ageMin && history.age <= criteria.ageMax,
   },
   {
     label: 'Nivolumab counter-indication',
+    short: 'Nivolumab',
     required: yesNo(criteria.nivolumab_counterindication),
     actual: yesNo(history.nivolumab_counterindication),
     pass: history.nivolumab_counterindication === criteria.nivolumab_counterindication,
   },
   {
     label: 'Ipilimumab counter-indication',
+    short: 'Ipilimumab',
     required: yesNo(criteria.ipilinumab_counterindication),
     actual: yesNo(history.ipilinumab_counterindication),
     pass: history.ipilinumab_counterindication === criteria.ipilinumab_counterindication,
   },
   {
     label: 'Active autoimmune disease',
+    short: 'Autoimmune',
     required: yesNo(criteria.active_autoimmune_therapy),
     actual: yesNo(history.active_autoimmune_therapy),
     pass: history.active_autoimmune_therapy === criteria.active_autoimmune_therapy,
   },
   {
     label: 'Prior chemotherapy',
+    short: 'Chemo',
     required: yesNo(criteria.chemotherapy),
     actual: yesNo(history.chemotherapy),
     pass: history.chemotherapy === criteria.chemotherapy,
   },
   {
     label: 'Prior immunotherapy',
+    short: 'Immuno',
     required: yesNo(criteria.immunotherapy),
     actual: yesNo(history.immunotherapy),
     pass: history.immunotherapy === criteria.immunotherapy,
