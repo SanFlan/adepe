@@ -160,6 +160,22 @@ export class PreviewProvider implements TrialsProvider {
         return;
       }
 
+      /**
+       * The deployment registered one issuer. If this build signs with a different key,
+       * every application is refused as untrusted -- after proving and paying, and looking
+       * exactly like an eligibility failure. Cheaper to compare the keys now.
+       */
+      if (
+        issuerPublicKey.x.toString() !== deployment.issuerPublicKey.x ||
+        issuerPublicKey.y.toString() !== deployment.issuerPublicKey.y
+      ) {
+        this.detail =
+          'This build signs with an issuer the deployed contract does not know, so every ' +
+          'application would be refused. Check VITE_ISSUER_SEED against the key in ' +
+          'deployment.preview.json, or deploy again to register this one.';
+        return;
+      }
+
       const addresses = await this.api.getShieldedAddresses();
       const zkConfigProvider = new BrowserZkConfigProvider<AdepeCircuitId>(
         `${window.location.origin}/zk`,

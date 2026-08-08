@@ -123,6 +123,18 @@ describe('preview provider', () => {
     expect(provider.status().detail).toContain('register');
   });
 
+  /**
+   * The deployment registered exactly one issuer key, so a build signing with a different
+   * one produces applications that are refused after proving and paying — and the refusal
+   * looks identical to not qualifying. Changing VITE_ISSUER_SEED without deploying again
+   * is the way to cause that, and this is what notices.
+   */
+  it('signs with the issuer the deployment registered', async () => {
+    const { issuerPublicKey } = await import('../lib/issuer.js');
+    expect(issuerPublicKey.x.toString()).toBe(deployment.issuerPublicKey.x);
+    expect(issuerPublicKey.y.toString()).toBe(deployment.issuerPublicKey.y);
+  });
+
   it('surfaces a rejected connection instead of throwing', async () => {
     install({
       lace: {

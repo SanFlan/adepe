@@ -111,12 +111,20 @@ deployed with it. This is fine for the local modes, where the ledger is in memor
 is nothing to administer. It is handled for preview: `scripts/deploy.ts` generates its own
 admin secret rather than using this one — see below.
 
-**The issuer's signing key** is a fixed seed in `app/src/lib/issuer.ts`, and this one is
-still open. The clinic's private key is in the bundle, so anyone can mint credentials the
-contract accepts — including on the preview deployment. It is the more serious of the two,
-because it forges the very attestations the whole design rests on. Closing it needs the
-clinic to sign somewhere the patient's browser cannot reach, which means a service rather
-than a page.
+**The issuer's signing key** is still open. It can be set with `VITE_ISSUER_SEED` so it need
+not be committed, but that is hygiene rather than a fix: Vite inlines every `VITE_` variable
+into the bundle, so the clinic's private key ships to every visitor regardless and anyone
+can mint credentials the contract accepts, including on the preview deployment. It is the
+more serious of the two, because it forges the very attestations the whole design rests on.
+
+Closing it means the clinic signing somewhere the patient's browser cannot reach — a service
+that takes a record and returns a signature. The app is already shaped for that: signing is
+one call behind `signHistory`, and everything downstream only ever sees the signature.
+
+Note the deployed contract trusts exactly one issuer, so changing the seed means deploying
+again. Preview mode compares the two keys at connect time and refuses to start if they
+disagree, rather than letting every application fail as "untrusted issuer" after proving and
+paying.
 
 ## Live on preview
 
