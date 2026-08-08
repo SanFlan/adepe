@@ -16,12 +16,13 @@ import {
 } from './lib/profiles.js';
 import { IssuerView } from './views/IssuerView.js';
 import { ClinicView } from './views/ClinicView.js';
+import { MobileView } from './views/MobileView.js';
 import { TrialsView } from './views/TrialsView.js';
 import { CredentialView } from './views/CredentialView.js';
 import { OverviewView } from './views/OverviewView.js';
 import { LedgerDrawer } from './views/LedgerDrawer.js';
 
-type Tab = 'trials' | 'credential' | 'clinic' | 'issuer' | 'overview';
+type Tab = 'phone' | 'trials' | 'credential' | 'clinic' | 'issuer' | 'overview';
 
 /**
  * Where the browser fetches proving keys, and where it sends them to be proved.
@@ -194,6 +195,7 @@ export const App = () => {
       <div className="tabs">
         {(
           [
+            ['phone', 'Patient app'],
             ['trials', 'Trials'],
             ['credential', 'My record'],
             ['clinic', 'Clinic'],
@@ -225,6 +227,13 @@ export const App = () => {
           <div className="card">
             <p className="note">No patient profiles. Add one from the header.</p>
           </div>
+        ) : tab === 'phone' ? (
+          <MobileView
+            provider={provider}
+            profile={selected}
+            revision={revision}
+            onLedgerChange={() => setRevision((value) => value + 1)}
+          />
         ) : tab === 'trials' ? (
           <TrialsView
             provider={provider}

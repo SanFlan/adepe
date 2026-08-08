@@ -64,6 +64,22 @@ dev/build so they cannot go stale against a recompiled contract. Point elsewhere
 This is the step that makes the cost visible: proving takes a real second or so, which
 every other local mode hides.
 
+## The views
+
+- **Patient app** — a phone, from the patient's side. Not a mockup: tapping Apply runs the
+  same `TrialsProvider` as the desktop Trials tab, so in Local proofs mode that spinner is
+  a proof server working, and the enrolment lands in Overview and the ledger drawer. This
+  is what the product actually is; everything else here is a control room.
+- **Trials** — the same flow with the criteria evaluation exposed.
+- **My record** — the held document, its signed fields, and the signature.
+- **Clinic** — one issuer, the whole patient roster, with per-row attestation status. The
+  header's patient switcher does not apply here; a clinic sees everyone.
+- **Record editor** — edit and sign one document at a time, following the header's
+  selected patient.
+- **Overview** — what the world can see: counts per trial and nothing else.
+
+A collapsible ledger drawer sits under every view.
+
 ## What is actually signed
 
 Only six fields — the ones `Verify` reads:
@@ -104,7 +120,7 @@ with it — `src/lib/schnorr6.test.ts` runs the real circuit to keep the two hon
 ## Tests
 
 ```
-npm test        # 43 tests (6 need a proof server)
+npm test        # 53 tests (6 need a proof server)
 npm run typecheck
 ```
 
@@ -118,7 +134,8 @@ The ones that matter:
   circuit and checks the UI's local eligibility prediction agrees with it.
 - `src/providers/providers.test.ts` — holds mocked and simulated to the same assertions,
   since the promise of the mode switcher is that they behave identically.
-- `src/App.test.tsx` — walks the demo path: sign a record, apply, get enrolled.
+- `src/App.test.tsx` — walks the demo path twice: once on the desktop tabs, once through
+  the phone (passport → trial list → detail → apply → "Mine"), plus the clinic roster.
 - `src/providers/localProofs.test.ts` — drives the local-proofs provider against a real
   proof server. **Skipped** (not silently passed) when the server is unreachable, so a
   green run without it visibly reports 6 skipped. `ADEPE_REQUIRE_PROOF_SERVER=1` turns

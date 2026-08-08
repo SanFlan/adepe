@@ -72,7 +72,14 @@ describe('App', () => {
 
   it('renders every tab without throwing', async () => {
     await render();
-    for (const tab of ['My record', 'Clinic', 'Record editor', 'Overview', 'Trials']) {
+    for (const tab of [
+      'My record',
+      'Clinic',
+      'Record editor',
+      'Overview',
+      'Patient app',
+      'Trials',
+    ]) {
       await clickText(tab);
       expect(container.textContent).toBeTruthy();
     }
@@ -155,6 +162,81 @@ describe('App', () => {
     await clickText('Sign all (2)');
     expect(container.textContent).toContain('signed by an unregistered issuer');
     expect(container.textContent).toContain('Backstreet Diagnostics');
+  });
+
+  /** The patient's phone: the same provider, seen from the other side. */
+  describe('patient app', () => {
+    const phoneTab = (label: string) =>
+      [...container.querySelectorAll('.phone-tabs button')].find((button) =>
+        button.textContent?.includes(label),
+      );
+
+    it('tells an unsigned patient to see their clinic', async () => {
+      await render();
+      await clickText('Patient app');
+
+      expect(container.querySelector('.phone')).not.toBeNull();
+      expect(container.textContent).toContain('Not yet signed by your clinic');
+      expect(container.querySelector('.passport.is-invalid')).not.toBeNull();
+    });
+
+    it('walks from passport to enrolment', async () => {
+      await render();
+
+      // The clinic attests first; nothing is applyable before that.
+      await clickText('Clinic');
+      await clickText('Sign all (2)');
+
+      await clickText('Patient app');
+      expect(container.querySelector('.passport.is-valid')).not.toBeNull();
+
+      await act(async () => phoneTab('Trials')!.dispatchEvent(
+        new MouseEvent('click', { bubbles: true }),
+      ));
+      expect(container.textContent).toContain('you may qualify');
+
+      // Open HORIZON-1, which Marta clears.
+      const card = [...container.querySelectorAll('.phone-card')].find((element) =>
+        element.textContent?.includes('HORIZON-1'),
+      )!;
+      await act(async () => card.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      expect(container.textContent).toContain('Eligibility');
+
+      const cta = container.querySelector('.phone-cta') as HTMLButtonElement;
+      expect(cta.textContent).toContain('Apply privately');
+      await act(async () => cta.click());
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      });
+
+      expect(container.textContent).toContain('Accepted');
+
+      await act(async () => phoneTab('Mine')!.dispatchEvent(
+        new MouseEvent('click', { bubbles: true }),
+      ));
+      expect(container.textContent).toContain('You hold a place in 1 trial');
+      expect(container.textContent).toContain('HORIZON-1');
+    });
+
+    it('will not let an ineligible patient apply', async () => {
+      await render();
+      await clickText('Clinic');
+      await clickText('Sign all (2)');
+      await clickText('Patient app');
+
+      await act(async () => phoneTab('Trials')!.dispatchEvent(
+        new MouseEvent('click', { bubbles: true }),
+      ));
+      // Marta is 54; VANGUARD-5 starts at 65.
+      const card = [...container.querySelectorAll('.phone-card')].find((element) =>
+        element.textContent?.includes('VANGUARD-5'),
+      )!;
+      await act(async () => card.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+
+      const cta = container.querySelector('.phone-cta') as HTMLButtonElement;
+      expect(cta.disabled).toBe(true);
+      expect(cta.textContent).toContain('do not match');
+    });
   });
 
   it('reports testnet as unavailable rather than crashing', async () => {
