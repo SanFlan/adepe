@@ -1,15 +1,40 @@
+/**
+ * Modelled on utrecht.jp: white ground, one saturated accent, hairline rules, hard corners.
+ *
+ * The structure is taken from that site's own stylesheet rather than guessed —
+ * `body{background-color:#fff;color:#db0000;letter-spacing:-.02em}`, borders uniformly
+ * `solid 1px`, weights 400 and 700 only. Two things carry the look: the accent is the
+ * *default* text colour, with black reserved for long-form prose, and every surface is an
+ * outline rather than a fill.
+ *
+ * The reference's red is #db0000; this uses #0000db, the same colour with its channels
+ * swapped, so the saturation and value that make the original work are preserved exactly.
+ *
+ * The accent means "look at this". That covers both an action worth taking and a criterion
+ * that failed — they never appear in the same component, so the readings do not collide.
+ *
+ * No rounded corners, no shadows, no gradients, no second accent.
+ */
+
 :root {
-  --bg: #0e1116;
-  --panel: #161b23;
-  --panel-2: #1c222c;
-  --line: #2a323f;
-  --text: #e6edf3;
-  --muted: #8b98a9;
-  --accent: #6ea8fe;
-  --good: #56d364;
-  --warn: #e3b341;
-  --bad: #f85149;
-  --radius: 10px;
+  --accent: #0000db;
+  --ink: #000;
+  --bg: #fff;
+  --fill: #f4f4f8;
+
+  /* Kept so any stray reference still resolves to something on-palette. */
+  --line: var(--accent);
+  --text: var(--accent);
+  --muted: var(--ink);
+  --panel: var(--bg);
+  --panel-2: var(--bg);
+  --good: var(--accent);
+  --bad: var(--accent);
+  --warn: var(--accent);
+  --radius: 0;
+
+  --sans: "GT America Standard", "Helvetica Neue", Helvetica, "Yu Gothic", YuGothic,
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans", meiryo, sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 }
 
@@ -20,134 +45,211 @@
 body {
   margin: 0;
   background: var(--bg);
-  color: var(--text);
-  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.667;
+  letter-spacing: -0.02em;
+  font-feature-settings: "palt";
 }
 
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------- controls */
+
+/*
+ * Free-standing controls are dashed; controls that sit inside a rule grid (tab cells,
+ * top-bar dividers, the phone's tab bar) keep that grid's solid rule instead, so the
+ * dashes read as "this is operable" rather than as noise.
+ */
 button {
   font: inherit;
-  color: inherit;
+  letter-spacing: inherit;
+  color: var(--accent);
   cursor: pointer;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-  border-radius: 7px;
-  padding: 7px 13px;
-  transition: border-color 0.12s, background 0.12s;
+  background: var(--bg);
+  border: dashed 1px var(--accent);
+  border-radius: 0;
+  padding: 6px 14px;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: solid 2px var(--accent);
+  outline-offset: 1px;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
 }
 
 button:disabled {
-  opacity: 0.45;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
+/* The filled block, as on the reference's Cart control. */
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #07101f;
-  font-weight: 600;
+  color: var(--bg);
+  font-weight: 700;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--accent);
 }
 
 select,
 input,
 textarea {
   font: inherit;
-  color: var(--text);
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 7px 10px;
+  letter-spacing: inherit;
+  color: var(--accent);
+  background: var(--bg);
+  border: dashed 1px var(--accent);
+  border-radius: 0;
+  padding: 5px 8px;
 }
 
 textarea {
   font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
   width: 100%;
   resize: vertical;
 }
 
 .mono {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
 }
 
+/* "muted" now means prose rather than grey: black is the quiet colour here. */
 .muted {
-  color: var(--muted);
+  color: var(--ink);
 }
 
-/* ---------------------------------------------------------------- header */
+/* ----------------------------------------------------------------- header */
 
 .topbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  align-items: stretch;
+  gap: 0;
+  border-bottom: solid 1px var(--accent);
+  background: var(--bg);
   position: sticky;
   top: 0;
   z-index: 5;
 }
 
+.topbar > * {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-right: solid 1px var(--accent);
+}
+
+.topbar > .spacer {
+  border-right: none;
+  flex: 1;
+  padding: 0;
+}
+
+.topbar > *:last-child {
+  border-right: none;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.topbar > *:last-child:hover {
+  background: var(--bg);
+  color: var(--accent);
+}
+
 .brand {
   font-weight: 700;
-  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .brand span {
-  color: var(--muted);
+  color: var(--ink);
   font-weight: 400;
-  margin-left: 9px;
-  font-size: 13px;
-}
-
-.spacer {
-  flex: 1;
+  margin-left: 10px;
+  text-transform: none;
 }
 
 .field {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--muted);
+  gap: 8px;
+  color: var(--accent);
+}
+
+.field select {
+  padding: 2px 6px;
+  font-weight: 700;
 }
 
 .tabs {
   display: flex;
-  gap: 4px;
-  padding: 12px 20px 0;
+  gap: 0;
+  border-bottom: solid 1px var(--accent);
 }
 
 .tabs button {
-  border-radius: 7px 7px 0 0;
-  border-bottom-color: transparent;
+  border: none;
+  border-right: solid 1px var(--accent);
+  border-radius: 0;
+  padding: 9px 18px;
 }
 
 .tabs button[aria-selected='true'] {
-  background: var(--panel);
-  border-color: var(--line);
-  border-bottom-color: var(--panel);
-  color: var(--text);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
 }
 
 main {
-  padding: 18px 20px 120px;
-  /* Wide enough for the trial rows to lay their criteria out side by side. */
+  padding: 22px 22px 130px;
   max-width: 1440px;
 }
 
-/* ---------------------------------------------------------------- blocks */
+/* Controls sitting directly in the bar: the cell draws the solid rule, the control keeps
+   its dashes so it still looks operable. */
+.topbar > button,
+.topbar > select {
+  background: none;
+  font-weight: 700;
+}
+
+.topbar > button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ----------------------------------------------------------------- blocks */
 
 .card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  background: var(--bg);
+  border: solid 1px var(--accent);
   padding: 16px 18px;
   margin-bottom: 14px;
 }
@@ -159,15 +261,14 @@ main {
 
 .card h3 {
   margin: 0 0 10px;
-  font-size: 14px;
-  color: var(--muted);
-  font-weight: 600;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
 }
 
+/* Long-form explanation: black, as the reference sets its body copy. */
 .note {
-  color: var(--muted);
+  color: var(--ink);
   font-size: 13px;
   margin: 0 0 12px;
 }
@@ -187,17 +288,18 @@ main {
 
 .kv {
   display: grid;
-  grid-template-columns: minmax(140px, auto) 1fr;
-  gap: 4px 14px;
+  grid-template-columns: minmax(150px, auto) 1fr;
+  gap: 3px 16px;
   font-size: 13px;
 }
 
 .kv dt {
-  color: var(--muted);
+  color: var(--accent);
 }
 
 .kv dd {
   margin: 0;
+  color: var(--ink);
   overflow-wrap: anywhere;
 }
 
@@ -206,37 +308,64 @@ main {
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--muted);
+  padding: 1px 9px;
+  border: solid 1px var(--accent);
+  color: var(--accent);
+  white-space: nowrap;
 }
 
+/* The strongest state gets the filled block; everything else is an outline. */
 .pill.good {
-  color: var(--good);
-  border-color: color-mix(in srgb, var(--good) 45%, transparent);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
 }
 
+/* Quiet, because "not eligible" is a fact rather than a call to act. */
 .pill.bad {
-  color: var(--bad);
-  border-color: color-mix(in srgb, var(--bad) 45%, transparent);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .pill.warn {
-  color: var(--warn);
-  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  border-style: dotted;
 }
 
 .signed-badge {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  border-style: dotted;
 }
 
-/* ---------------------------------------------------------------- trials */
+.errors {
+  color: var(--accent);
+  font-size: 13px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.bar {
+  height: 4px;
+  background: var(--bg);
+  border: solid 1px var(--accent);
+  overflow: hidden;
+}
+
+.bar > div {
+  height: 100%;
+  background: var(--accent);
+}
+
+.code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* ----------------------------------------------------------------- trials */
 
 .trial-rows {
   display: grid;
-  gap: 8px;
+  gap: 0;
+  border-top: solid 1px var(--accent);
 }
 
 /* Shared column track: the criteria line up between rows, which is the point. */
@@ -249,35 +378,26 @@ main {
 }
 
 .trial-head {
-  padding: 0 16px 4px;
+  padding: 6px 16px;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
+  border-bottom: solid 1px var(--accent);
 }
 
 .trial {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 13px 16px;
-}
-
-.trial .code {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--accent);
+  padding: 14px 16px;
+  border-bottom: solid 1px var(--accent);
 }
 
 .trial h4 {
-  margin: 5px 0 3px;
+  margin: 4px 0 3px;
   font-size: 15px;
   line-height: 1.3;
 }
 
 .trial-meta {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ink);
 }
 
 /* -- criteria strip -- */
@@ -285,7 +405,7 @@ main {
 .trial-criteria {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
 }
 
 .crit {
@@ -293,32 +413,29 @@ main {
   align-items: baseline;
   gap: 5px;
   font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-  color: var(--muted);
+  padding: 1px 7px;
+  border: solid 1px var(--ink);
+  background: var(--bg);
+  color: var(--ink);
   cursor: help;
 }
 
 .crit b {
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.crit.ok b {
-  color: var(--good);
-}
-
+/* A failed criterion is the thing to look at, so it becomes a filled block. */
 .crit.no {
-  border-color: color-mix(in srgb, var(--bad) 45%, transparent);
-  color: var(--text);
-}
-
-.crit.no b {
-  color: var(--bad);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
 }
 
 /* -- enrolment and action -- */
+
+.trial-count {
+  color: var(--accent);
+}
 
 .trial-count .bar {
   margin-top: 5px;
@@ -334,20 +451,16 @@ main {
 .trial-result {
   /* Spans every column, so a result pushes the row taller only when there is one. */
   grid-column: 1 / -1;
-  border-radius: 7px;
   padding: 8px 11px;
   font-size: 13px;
-  border: 1px solid var(--line);
+  border: solid 1px var(--accent);
+  color: var(--ink);
 }
 
 .trial-result.enrolled {
-  border-color: color-mix(in srgb, var(--good) 50%, transparent);
-  background: color-mix(in srgb, var(--good) 9%, transparent);
-}
-
-.trial-result.rejected {
-  border-color: color-mix(in srgb, var(--bad) 50%, transparent);
-  background: color-mix(in srgb, var(--bad) 9%, transparent);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
 }
 
 @media (max-width: 900px) {
@@ -361,7 +474,41 @@ main {
   }
 }
 
-/* ----------------------------------------------------------------- phone */
+/* ----------------------------------------------------------------- roster */
+
+.roster {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.roster th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 5px 10px;
+  border-bottom: solid 1px var(--accent);
+}
+
+.roster td {
+  padding: 10px;
+  border-bottom: solid 1px var(--accent);
+  vertical-align: top;
+  color: var(--ink);
+}
+
+.roster tr:last-child td {
+  border-bottom: none;
+}
+
+/* The header's patient switcher still points at one of these rows. */
+.roster tr.is-selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* ------------------------------------------------------------------ phone */
 
 .phone-stage {
   display: flex;
@@ -371,16 +518,15 @@ main {
 }
 
 .phone {
+  position: relative;
   width: 372px;
   height: 764px;
   flex: none;
   display: flex;
   flex-direction: column;
-  background: #090b0f;
-  border: 9px solid #1b1f27;
-  border-radius: 42px;
+  background: var(--bg);
+  border: solid 1px var(--accent);
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
 .phone-aside {
@@ -390,150 +536,143 @@ main {
 }
 
 .phone-aside h3 {
-  margin: 4px 0 10px;
-  font-size: 14px;
-  color: var(--muted);
+  margin: 18px 0 8px;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .phone-status {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
+  padding: 7px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  border-bottom: solid 1px var(--accent);
   flex: none;
 }
 
 .phone-notch {
-  width: 86px;
-  height: 20px;
-  background: #1b1f27;
-  border-radius: 999px;
+  width: 74px;
+  height: 10px;
+  background: var(--accent);
 }
 
 .phone-signal {
   font-size: 10px;
-  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .phone-screen {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 20px 24px;
+  padding: 16px 18px 24px;
 }
 
 .phone-h1 {
-  font-size: 24px;
-  line-height: 1.2;
-  margin: 8px 0 4px;
+  font-size: 23px;
+  line-height: 1.15;
+  margin: 6px 0 4px;
 }
 
 .phone-h2 {
-  font-size: 14px;
+  font-size: 12px;
   margin: 20px 0 8px;
-  color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .phone-sub {
-  color: var(--muted);
-  font-size: 13.5px;
+  color: var(--ink);
+  font-size: 13px;
   margin: 0 0 16px;
 }
 
 /* -- passport card -- */
 
 .passport {
-  border-radius: 16px;
-  padding: 16px;
+  border: solid 1px var(--accent);
+  padding: 15px;
   margin-bottom: 16px;
-  background: linear-gradient(150deg, #1d2a3f, #141a24);
-  border: 1px solid var(--line);
 }
 
-.passport.is-invalid {
-  background: linear-gradient(150deg, #3a2028, #1a1418);
+/* An attested passport is the filled block; an unattested one is an empty outline. */
+.passport.is-valid {
+  background: var(--accent);
+  color: var(--bg);
 }
 
 .passport header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
   margin-bottom: 14px;
 }
 
 .passport-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
+  width: 20px;
+  height: 20px;
   display: grid;
   place-items: center;
   font-size: 12px;
-  background: var(--bad);
-  color: #12070a;
-}
-
-.passport.is-valid .passport-dot {
-  background: var(--good);
-  color: #06180b;
+  font-weight: 700;
+  border: solid 1px currentColor;
 }
 
 .passport strong {
   font-size: 19px;
   display: block;
+  line-height: 1.15;
 }
 
 .passport-id {
   font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
+  font-size: 11px;
+  margin-top: 3px;
 }
 
 .passport footer {
-  margin-top: 16px;
+  margin-top: 15px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-  font-size: 12px;
-  color: var(--muted);
+  border-top: solid 1px currentColor;
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
 /* -- lists and cards -- */
 
 .phone-callout {
-  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
-  background: color-mix(in srgb, var(--warn) 10%, transparent);
-  border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 13px;
+  border: solid 1px var(--accent);
+  padding: 11px 13px;
+  font-size: 12.5px;
+  color: var(--ink);
 }
 
 .phone-callout.is-quiet {
-  border-color: var(--line);
-  background: var(--panel);
-  color: var(--muted);
+  border-color: var(--ink);
 }
 
 .phone-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   width: 100%;
   text-align: left;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 10px;
+  background: var(--bg);
+  border: none;
+  border-top: solid 1px var(--accent);
+  padding: 12px 0;
+  margin: 0;
+}
+
+.phone-card:last-of-type {
+  border-bottom: solid 1px var(--accent);
+}
+
+.phone-card:hover:not(:disabled) {
+  background: var(--fill);
+  color: inherit;
 }
 
 .phone-card.is-static {
@@ -547,34 +686,37 @@ main {
   gap: 8px;
 }
 
+.phone-card strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
 .phone-code {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--accent);
-  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .phone-meta {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 11.5px;
+  color: var(--ink);
 }
 
 .phone-chip {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--muted);
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border: solid 1px var(--ink);
+  color: var(--ink);
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .phone-chip.good {
-  color: var(--good);
-  border-color: color-mix(in srgb, var(--good) 45%, transparent);
-}
-
-.phone-chip.bad {
-  color: var(--muted);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
 }
 
 /* -- detail -- */
@@ -583,27 +725,35 @@ main {
   border: none;
   background: none;
   padding: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.phone-back:hover:not(:disabled) {
+  background: none;
   color: var(--accent);
-  font-size: 14px;
+  text-decoration: underline;
 }
 
 .phone-facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 0 0 4px;
+  gap: 9px;
+  margin: 12px 0 4px;
+  padding: 11px 0;
+  border-top: solid 1px var(--accent);
+  border-bottom: solid 1px var(--accent);
 }
 
 .phone-facts dt {
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .phone-facts dd {
-  margin: 2px 0 0;
-  font-size: 13px;
+  margin: 1px 0 0;
+  font-size: 12.5px;
+  color: var(--ink);
 }
 
 .phone-criteria {
@@ -611,65 +761,56 @@ main {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 7px;
+  gap: 5px;
 }
 
 .phone-criteria li {
   display: grid;
-  grid-template-columns: 16px 1fr auto;
+  grid-template-columns: 14px 1fr auto;
   gap: 8px;
   align-items: baseline;
-  font-size: 13px;
+  font-size: 12.5px;
+  color: var(--ink);
 }
 
 .phone-criteria li em {
-  font-style: normal;
-  color: var(--muted);
-  font-size: 12px;
+  font-weight: 400;
+  font-size: 11.5px;
 }
 
-.phone-criteria li.ok > span {
-  color: var(--good);
-}
-
-.phone-criteria li.no > span {
-  color: var(--bad);
+.phone-criteria li.no {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .phone-fineprint {
-  font-size: 11.5px;
-  color: var(--muted);
+  font-size: 11px;
+  color: var(--ink);
   margin: 10px 0 0;
 }
 
 .phone-result {
-  border-radius: 12px;
-  padding: 11px 13px;
-  font-size: 13px;
+  padding: 10px 12px;
+  font-size: 12.5px;
   margin-top: 14px;
-  border: 1px solid var(--line);
-}
-
-.phone-result.good {
-  border-color: color-mix(in srgb, var(--good) 50%, transparent);
-  background: color-mix(in srgb, var(--good) 10%, transparent);
-}
-
-.phone-result.bad {
-  border-color: color-mix(in srgb, var(--bad) 50%, transparent);
-  background: color-mix(in srgb, var(--bad) 10%, transparent);
+  border: solid 1px var(--accent);
+  color: var(--ink);
 }
 
 .phone-cta {
   width: 100%;
   margin-top: 18px;
-  padding: 14px;
-  border-radius: 14px;
+  padding: 13px;
   background: var(--accent);
-  border-color: var(--accent);
-  color: #07101f;
-  font-weight: 600;
-  font-size: 15px;
+  border: solid 1px var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.phone-cta:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--accent);
 }
 
 /* -- kiosk: the phone alone in a popup window -- */
@@ -688,8 +829,6 @@ main {
   width: 100vw;
   height: 100vh;
   border: none;
-  border-radius: 0;
-  box-shadow: none;
 }
 
 /* No hardware to imitate when the window *is* the device. */
@@ -699,58 +838,54 @@ main {
 
 /* -- submitted sheet -- */
 
-.phone {
-  position: relative;
-}
-
 .phone-sheet {
   position: absolute;
   inset: 0;
   z-index: 3;
-  background: linear-gradient(170deg, #10261a, #090b0f 55%);
-  padding: 40px 26px 26px;
+  background: var(--bg);
+  padding: 44px 24px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  animation: sheet-in 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation: sheet-in 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
 @keyframes sheet-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(12px);
   }
 }
 
 .phone-sheet h2 {
-  margin: 24px 0 8px;
-  font-size: 23px;
+  margin: 22px 0 8px;
+  font-size: 24px;
 }
 
 .phone-sheet-copy {
   margin: 0;
-  color: var(--text);
-  font-size: 14.5px;
-  line-height: 1.5;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .phone-sheet-trial {
-  margin-top: 24px;
+  margin-top: 22px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
+  gap: 2px;
+  padding: 13px;
+  border-top: solid 1px var(--accent);
+  border-bottom: solid 1px var(--accent);
+  text-align: left;
 }
 
 .phone-sheet-fine {
-  margin: 18px 0 0;
-  font-size: 12.5px;
-  color: var(--muted);
+  margin: 16px 0 0;
+  font-size: 11.5px;
+  color: var(--ink);
   line-height: 1.5;
 }
 
@@ -761,20 +896,20 @@ main {
 /* -- animated checkmark -- */
 
 .tick svg {
-  width: 92px;
-  height: 92px;
+  width: 88px;
+  height: 88px;
 }
 
 .tick circle,
 .tick path {
   fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
 }
 
 .tick-ring {
-  stroke: var(--good);
-  stroke-width: 3;
+  stroke: var(--accent);
+  stroke-width: 2;
   /* 2 * pi * r */
   stroke-dasharray: 176;
   stroke-dashoffset: 176;
@@ -784,11 +919,11 @@ main {
 }
 
 .tick-mark {
-  stroke: var(--good);
-  stroke-width: 4.5;
+  stroke: var(--accent);
+  stroke-width: 4;
   stroke-dasharray: 44;
   stroke-dashoffset: 44;
-  animation: tick-mark 0.32s cubic-bezier(0.4, 0, 0.2, 1) 0.42s forwards;
+  animation: tick-mark 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.42s forwards;
 }
 
 @keyframes tick-ring {
@@ -822,59 +957,63 @@ main {
 .phone-tabs {
   flex: none;
   display: flex;
-  border-top: 1px solid var(--line);
-  background: var(--panel);
-  padding-bottom: 8px;
+  border-top: solid 1px var(--accent);
+  background: var(--bg);
 }
 
 .phone-tabs button {
   flex: 1;
   border: none;
-  background: none;
-  border-radius: 0;
-  padding: 10px 0 6px;
+  border-right: solid 1px var(--accent);
+  padding: 13px 0;
   font-size: 11px;
-  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
   position: relative;
 }
 
-.phone-tabs button[aria-selected='true'] {
-  color: var(--accent);
+.phone-tabs button:last-child {
+  border-right: none;
 }
 
-.phone-tab-icon {
-  font-size: 17px;
-  line-height: 1;
+.phone-tabs button[aria-selected='true'] {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
 }
 
 .phone-badge {
   position: absolute;
   top: 6px;
   right: 50%;
-  transform: translateX(20px);
+  transform: translateX(26px);
   background: var(--accent);
-  color: #07101f;
-  border-radius: 999px;
-  font-size: 10px;
+  color: var(--bg);
+  border: solid 1px var(--bg);
+  font-size: 9px;
   font-weight: 700;
-  min-width: 16px;
-  padding: 0 4px;
-  line-height: 16px;
+  min-width: 15px;
+  padding: 0 3px;
+  line-height: 14px;
 }
 
-/* ---------------------------------------------------------------- drawer */
+.phone-tabs button[aria-selected='true'] .phone-badge {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+/* ----------------------------------------------------------------- drawer */
 
 .drawer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--panel);
-  border-top: 1px solid var(--line);
+  background: var(--bg);
+  border-top: solid 1px var(--accent);
   z-index: 6;
   max-height: 60vh;
   display: flex;
@@ -885,46 +1024,26 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 20px;
+  padding: 7px 22px;
   cursor: pointer;
   user-select: none;
 }
 
+.drawer > header:hover {
+  background: var(--fill);
+}
+
 .drawer .body {
   overflow: auto;
-  padding: 0 20px 18px;
+  padding: 0 22px 18px;
   display: grid;
-  gap: 14px;
+  gap: 16px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
 .drawer .panel h5 {
-  margin: 0 0 2px;
+  margin: 0 0 3px;
   font-family: var(--mono);
-  font-size: 13px;
-  color: var(--accent);
-}
-
-.errors {
-  color: var(--bad);
-  font-size: 13px;
-  margin: 8px 0 0;
-  padding-left: 18px;
-}
-
-.result {
-  border-radius: 7px;
-  padding: 9px 12px;
-  font-size: 13.5px;
-  border: 1px solid var(--line);
-}
-
-.result.enrolled {
-  border-color: color-mix(in srgb, var(--good) 50%, transparent);
-  background: color-mix(in srgb, var(--good) 9%, transparent);
-}
-
-.result.rejected {
-  border-color: color-mix(in srgb, var(--bad) 50%, transparent);
-  background: color-mix(in srgb, var(--bad) 9%, transparent);
+  font-size: 12px;
+  text-transform: uppercase;
 }

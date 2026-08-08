@@ -150,11 +150,11 @@ export const MobileView = ({
         <nav className="phone-tabs">
           {(
             [
-              ['home', 'Home', '🏠'],
-              ['trials', 'Trials', '🔬'],
-              ['applications', 'Mine', '✓'],
-            ] as ReadonlyArray<[Screen, string, string]>
-          ).map(([id, label, icon]) => (
+              ['home', 'Home'],
+              ['trials', 'Trials'],
+              ['applications', 'Mine'],
+            ] as ReadonlyArray<[Screen, string]>
+          ).map(([id, label]) => (
             <button
               key={id}
               aria-selected={detail === null && screen === id}
@@ -163,7 +163,6 @@ export const MobileView = ({
                 setScreen(id);
               }}
             >
-              <span className="phone-tab-icon">{icon}</span>
               {label}
               {id === 'applications' && enrolled.length > 0 ? (
                 <span className="phone-badge">{enrolled.length}</span>
