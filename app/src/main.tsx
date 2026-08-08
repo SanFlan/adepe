@@ -1,3 +1,6 @@
+// First, and deliberately so: see the note in polyfills.ts.
+import './polyfills.js';
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
