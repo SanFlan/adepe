@@ -15,12 +15,13 @@ import {
   type Profile,
 } from './lib/profiles.js';
 import { IssuerView } from './views/IssuerView.js';
+import { ClinicView } from './views/ClinicView.js';
 import { TrialsView } from './views/TrialsView.js';
 import { CredentialView } from './views/CredentialView.js';
 import { OverviewView } from './views/OverviewView.js';
 import { LedgerDrawer } from './views/LedgerDrawer.js';
 
-type Tab = 'trials' | 'credential' | 'issuer' | 'overview';
+type Tab = 'trials' | 'credential' | 'clinic' | 'issuer' | 'overview';
 
 /**
  * Where the browser fetches proving keys, and where it sends them to be proved.
@@ -90,6 +91,23 @@ export const App = () => {
     (updated: Profile) => {
       persist(
         profiles.map((profile) => (profile.id === updated.id ? updated : profile)),
+        selectedId,
+      );
+    },
+    [persist, profiles, selectedId],
+  );
+
+  /**
+   * Apply several profile updates at once.
+   *
+   * Calling `updateProfile` in a loop would not work: each call maps over the `profiles`
+   * captured in its closure, so every write but the last would be discarded.
+   */
+  const updateProfiles = useCallback(
+    (updated: readonly Profile[]) => {
+      const byId = new Map(updated.map((profile) => [profile.id, profile]));
+      persist(
+        profiles.map((profile) => byId.get(profile.id) ?? profile),
         selectedId,
       );
     },
@@ -178,7 +196,10 @@ export const App = () => {
           [
             ['trials', 'Trials'],
             ['credential', 'My record'],
-            ['issuer', 'Issuer'],
+            ['clinic', 'Clinic'],
+            // Named for what it does rather than who does it: "Issuer" alongside "Clinic"
+            // reads as two names for the same thing.
+            ['issuer', 'Record editor'],
             ['overview', 'Overview'],
           ] as ReadonlyArray<[Tab, string]>
         ).map(([id, label]) => (
@@ -213,6 +234,13 @@ export const App = () => {
           />
         ) : tab === 'credential' ? (
           <CredentialView profile={selected} />
+        ) : tab === 'clinic' ? (
+          <ClinicView
+            profiles={profiles}
+            selectedId={selectedId}
+            onUpdate={updateProfile}
+            onUpdateMany={updateProfiles}
+          />
         ) : tab === 'issuer' ? (
           <IssuerView profile={selected} onIssued={updateProfile} />
         ) : (

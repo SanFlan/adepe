@@ -72,7 +72,7 @@ describe('App', () => {
 
   it('renders every tab without throwing', async () => {
     await render();
-    for (const tab of ['My record', 'Issuer', 'Overview', 'Trials']) {
+    for (const tab of ['My record', 'Clinic', 'Record editor', 'Overview', 'Trials']) {
       await clickText(tab);
       expect(container.textContent).toBeTruthy();
     }
@@ -80,7 +80,7 @@ describe('App', () => {
 
   it('shows the issuer key and the six signed fields', async () => {
     await render();
-    await clickText('Issuer');
+    await clickText('Record editor');
     expect(container.textContent).toContain('Northgate Oncology');
     expect(container.textContent).toContain('The six signed fields');
   });
@@ -89,7 +89,7 @@ describe('App', () => {
   it('signs a record and enrolls the patient in a trial she qualifies for', async () => {
     await render();
 
-    await clickText('Issuer');
+    await clickText('Record editor');
     await clickText('Sign as Northgate Oncology');
 
     await clickText('Trials');
@@ -118,6 +118,43 @@ describe('App', () => {
 
     await clickText('Overview');
     expect(container.textContent).toContain('1 enrollments');
+  });
+
+  /** The clinic roster: one issuer, every patient, independent of the header switcher. */
+  it('signs every patient from the clinic roster in one action', async () => {
+    await render();
+    await clickText('Clinic');
+
+    const rows = () => [...container.querySelectorAll('table.roster tbody tr')];
+    expect(rows()).toHaveLength(2); // the two seeded profiles
+    expect(container.textContent).toContain('2 awaiting a usable attestation');
+    expect(rows().every((row) => row.textContent?.includes('not signed'))).toBe(true);
+
+    await clickText('Sign all (2)');
+
+    expect(rows().every((row) => row.textContent?.includes('signed'))).toBe(true);
+    expect(container.textContent).toContain('0 awaiting a usable attestation');
+
+    // Both patients, not just the one the header has selected.
+    await clickText('Trials');
+    expect(container.textContent).not.toContain('has not been signed yet');
+  });
+
+  it('marks an attestation from the unregistered issuer as untrusted', async () => {
+    await render();
+    await clickText('Clinic');
+
+    const issuerSelect = [...container.querySelectorAll('select')].find((select) =>
+      select.textContent?.includes('not registered'),
+    )!;
+    await act(async () => {
+      issuerSelect.value = 'rogue';
+      issuerSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await clickText('Sign all (2)');
+    expect(container.textContent).toContain('signed by an unregistered issuer');
+    expect(container.textContent).toContain('Backstreet Diagnostics');
   });
 
   it('reports testnet as unavailable rather than crashing', async () => {

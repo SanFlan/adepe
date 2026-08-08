@@ -295,6 +295,40 @@ main {
   background: var(--accent);
 }
 
+/* ---------------------------------------------------------------- roster */
+
+.roster {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.roster th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.roster td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.roster tr:last-child td {
+  border-bottom: none;
+}
+
+/* The header's patient switcher still points at one of these rows. */
+.roster tr.is-selected td:first-child {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
 /* ---------------------------------------------------------------- drawer */
 
 .drawer {
