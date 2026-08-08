@@ -9,3 +9,5 @@
 # Funded wallet seeds. Never commit these.
 .env
 .env.*
+# ...except the template, which holds no values.
+!.env.example

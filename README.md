@@ -49,7 +49,7 @@ Each step adds one thing to the one above it. Switch between them in the Config 
 | **Mocked** | TypeScript stand-in | none | `localStorage` |
 | **Simulated** | real, in-process | none | in memory |
 | **Local proofs** | real, in-process | **real**, local proof server | in memory |
-| **Preview testnet** | real | real | the chain — not wired yet |
+| **Preview testnet** | real | real | the deployed contract, via Lace |
 
 Signatures are real in every mode, including Mocked. It fakes the ledger, not the
 cryptography.
@@ -142,10 +142,40 @@ The admin secret for this deployment was generated at deploy time rather than ta
 app, so the key that can open trials and register issuers is **not** in the shipped
 JavaScript. It is in `contract/.env.preview` as `ADEPE_ADMIN_SECRET`, and nowhere else.
 
+## Using Preview testnet mode
+
+Needs three things, and the mode says which one is missing rather than failing later:
+
+1. **Lace**, speaking connector API 4.x, set to the Preview network.
+2. **A funded wallet.** Each application is a transaction the patient pays for.
+3. **A local proof server** — `make proof-server` — configured in Lace. The wallet
+   nominates the prover, and in practice that is your own machine. This mode is therefore
+   not a link you can send someone.
+
+Expect roughly 20 seconds per application against roughly 800ms in Local proofs, because
+the wait is now block time rather than proving.
+
+The app is only a client here. It does not deploy, and it cannot open trials: the contract
+already exists and its admin secret is not in the bundle. Enrollment pseudonyms come from
+the patient's secret, not the wallet, so one funded wallet can apply as every patient in
+the roster.
+
+**Unverified.** Every failure path is covered by tests with a fake wallet — no wallet,
+wrong connector version, wrong network, missing proof server, rejected connection — but the
+successful path has never been run against real Lace. Treat the first attempt as a test.
+
+## Environment
+
+`contract/.env.example` and `app/.env.example` list every variable with instructions.
+Copy the one you need:
+
+```
+cp contract/.env.example contract/.env.preview
+```
+
+Nothing is required for local development. A seed is needed only to deploy or to run the
+integration test against a public network.
+
 ## Not done yet
 
-- **Lace wiring.** `PreviewProvider` is a stub that reports what it needs.
-  `example-bboard`'s `BrowserDeployedBoardManager` is the pattern to follow. Three things to
-  weigh first: the proof server stays local, so a shared link still needs Docker;
-  transactions take roughly 20 seconds each against roughly 800ms for Local proofs; and the
-  Lace connector version has not been verified.
+- The issuer's signing key is still in the app bundle. See above.

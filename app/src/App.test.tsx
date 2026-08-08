@@ -449,6 +449,7 @@ describe('App', () => {
     });
 
     expect(container.textContent).toContain('is not available');
-    expect(container.textContent).toContain('needs a connected Lace wallet');
+    // jsdom injects no wallet, which is the same thing a browser without Lace sees.
+    expect(container.textContent).toContain('Install Lace');
   });
 });

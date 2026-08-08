@@ -6,9 +6,11 @@
  * generation is skipped -- which is the whole difference between this and `testnet`.
  */
 
-import { pureCircuits, type AdepePrivateState } from '../lib/contract.js';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import type { AdepePrivateState } from '../lib/contract.js';
 import { AdepeSimulator } from '../lib/simulator.js';
-import { ISSUER_NAME, formatPoint, issuerPublicKey } from '../lib/issuer.js';
+import { ISSUER_NAME, issuerPublicKey } from '../lib/issuer.js';
+import { isEnrolledIn, ledgerPanels, trialStates } from '../lib/ledger-view.js';
 import { hexToBytes, type Profile } from '../lib/profiles.js';
 import { TRIALS, isEligible, trialById } from '../lib/trials.js';
 import { toCredential } from './credential.js';
@@ -26,9 +28,6 @@ const ADMIN_STATE: AdepePrivateState = {
   credential: null,
 };
 
-const toHex = (bytes: Uint8Array) =>
-  Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-
 export class SimulatedProvider implements TrialsProvider {
   readonly mode = 'simulated' as const;
   private sim: AdepeSimulator | null = null;
@@ -41,6 +40,9 @@ export class SimulatedProvider implements TrialsProvider {
 
   async init(): Promise<void> {
     if (this.sim !== null) return;
+    // Nothing is submitted anywhere; the preview provider is the only one that is not
+    // 'undeployed', and it sets its own.
+    setNetworkId('undeployed');
     const sim = new AdepeSimulator(ADMIN_STATE);
     sim.callAs(ADMIN_STATE, 'registerProvider', issuerPublicKey);
     for (const { id, criteria } of TRIALS) {
@@ -66,21 +68,11 @@ export class SimulatedProvider implements TrialsProvider {
   }
 
   listTrials(): readonly TrialState[] {
-    const ledger = this.sim?.ledger();
-    return TRIALS.map((trial) => ({
-      trial,
-      open: ledger?.ElegiblePeople.member(trial.id) ?? false,
-      enrolledCount: ledger?.ElegiblePeople.member(trial.id)
-        ? Number(ledger.ElegiblePeople.lookup(trial.id).size())
-        : 0,
-    }));
+    return trialStates(this.sim?.ledger() ?? null);
   }
 
   isEnrolled(profile: Profile, trialId: bigint): boolean {
-    const ledger = this.sim?.ledger();
-    if (ledger === undefined || !ledger.ElegiblePeople.member(trialId)) return false;
-    const key = pureCircuits.enrollmentKey(hexToBytes(profile.userSecret), trialId);
-    return ledger.ElegiblePeople.lookup(trialId).member(key);
+    return isEnrolledIn(this.sim?.ledger() ?? null, profile.userSecret, trialId);
   }
 
   /**
@@ -133,41 +125,7 @@ export class SimulatedProvider implements TrialsProvider {
   }
 
   ledgerPanels(): readonly LedgerPanel[] {
-    const ledger = this.sim?.ledger();
-    if (ledger === undefined) return [];
-
-    return [
-      {
-        title: 'providers',
-        note: 'Issuers the contract will accept signatures from',
-        rows: [...ledger.providers].map((point, index) => ({
-          label: `#${index}`,
-          value: formatPoint(point),
-          mono: true,
-        })),
-      },
-      {
-        title: 'ElegiblePeople',
-        note: 'Public. One pseudonym per enrollment, unlinkable across trials.',
-        rows: TRIALS.flatMap((trial) => {
-          if (!ledger.ElegiblePeople.member(trial.id)) return [];
-          const members = [...ledger.ElegiblePeople.lookup(trial.id)];
-          if (members.length === 0) {
-            return [{ label: trial.code, value: 'empty' }];
-          }
-          return members.map((key, index) => ({
-            label: `${trial.code} #${index}`,
-            value: `${toHex(key).slice(0, 12)}…`,
-            mono: true,
-          }));
-        }),
-      },
-      {
-        title: 'contractAdmin',
-        note: 'Set at deploy time from the deployer\u2019s secret',
-        rows: [{ label: 'key', value: `${toHex(ledger.contractAdmin).slice(0, 16)}…`, mono: true }],
-      },
-    ];
+    return ledgerPanels(this.sim?.ledger() ?? null);
   }
 
   /** Exposed for the UI's local pre-check; the contract never reveals this. */
