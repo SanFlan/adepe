@@ -70,7 +70,20 @@
   .bar--top .bar__section { text-align: right; }
 
   .bar__wordmark { font-weight: 700; }
-  .bar__section { color: var(--accent-quiet); }
+
+  /* One line, always. A wrapped section title pushes the bar taller and steals height
+     from the slide, so the title tightens as the track narrows — which is what browser
+     zoom does, since the body size bottoms out at 16px while the viewport keeps shrinking.
+     The ellipsis is a floor that is never reached by these eight titles; it is there so a
+     longer one degrades quietly instead of running over the wordmark. */
+  .bar__section {
+    color: var(--accent-quiet);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 900px) { .bar__section { font-size: 0.85em; letter-spacing: 0.06em; } }
+  @media (max-width: 660px) { .bar__section { font-size: 0.75em; letter-spacing: 0.04em; } }
   .bar__pdf {
     color: inherit;
     text-decoration: none;
@@ -300,7 +313,7 @@
           <p class="stat num">~30%</p>
           <p class="small">de los pacientes evaluados no superan la elegibilidad. En
             oncología, cerca del 40%.</p>
-          <ul class="stack">
+          <ul class="stack small">
             <li class="tick">La Fase 2b necesita 100–300 pacientes; la Fase 3, 300–3.000</li>
             <li class="tick">Aproximadamente 8 de cada 10 ensayos no cumplen su cronograma de inscripción</li>
             <li class="tick">Se activan sitios que nunca inscriben un solo paciente</li>
@@ -311,7 +324,7 @@
           <p class="stat num">0</p>
           <p class="small">formas de buscar un ensayo sin entregarle tu diagnóstico
             a un desconocido.</p>
-          <ul class="stack">
+          <ul class="stack small">
             <li class="tick">Gasto de bolsillo y días de trabajo perdidos por una evaluación que falla</li>
             <li class="tick">El estrés de perseguir estudios estando enfermo</li>
             <li class="tick">Historial oncológico divulgado a cada patrocinador al que te acercás</li>
