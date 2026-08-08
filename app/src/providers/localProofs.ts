@@ -249,7 +249,7 @@ export class LocalProofsProvider implements TrialsProvider {
     return [
       {
         title: 'proving',
-        note: `Proof server at ${this.proofServerUrl}. Proofs are generated, then discarded — there is no chain to submit them to.`,
+        note: `Proof server at ${this.proofServerUrl}. Proofs are generated, then discarded. There is no chain to submit them to.`,
         rows: [
           {
             label: 'last proof',
@@ -268,7 +268,7 @@ export class LocalProofsProvider implements TrialsProvider {
       },
       {
         title: 'ElegiblePeople',
-        note: 'Public. One pseudonym per enrollment — unlinkable across trials.',
+        note: 'Public. One pseudonym per enrollment, unlinkable across trials.',
         rows: TRIALS.flatMap((trial) => {
           if (!view.ElegiblePeople.member(trial.id)) return [];
           const members = [...view.ElegiblePeople.lookup(trial.id)];

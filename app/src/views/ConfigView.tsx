@@ -61,15 +61,10 @@ export const ConfigView = ({ provider, mode, onModeChange, revision, onReset }: 
       </div>
 
       <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ margin: 0 }}>Ledger</h3>
-            <p className="note" style={{ margin: '4px 0 0' }}>
-              The public state. Everything here is visible to anyone.
-            </p>
-          </div>
-          <button onClick={onReset}>Reset demo</button>
-        </div>
+        <h3>Ledger</h3>
+        <p className="note" style={{ marginBottom: 0 }}>
+          The public state. Everything here is visible to anyone.
+        </p>
 
         <div className="ledger-panels">
           {panels.length === 0 ? <p className="note">Nothing on the ledger yet.</p> : null}
@@ -91,11 +86,16 @@ export const ConfigView = ({ provider, mode, onModeChange, revision, onReset }: 
       </div>
 
       <div className="card">
-        <h3>Reset</h3>
-        <p className="note" style={{ marginBottom: 0 }}>
-          Clears every patient and every enrollment, then seeds two patients again. Useful
-          between takes.
-        </p>
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ margin: 0 }}>Reset</h3>
+            <p className="note" style={{ margin: '4px 0 0' }}>
+              Clears every patient and every enrollment, then seeds two patients again.
+              Useful between takes.
+            </p>
+          </div>
+          <button onClick={onReset}>Reset demo</button>
+        </div>
       </div>
     </>
   );

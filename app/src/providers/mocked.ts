@@ -168,7 +168,7 @@ export class MockedProvider implements TrialsProvider {
       },
       {
         title: 'ElegiblePeople',
-        note: 'Public. One pseudonym per enrollment — unlinkable across trials.',
+        note: 'Public. One pseudonym per enrollment, unlinkable across trials.',
         rows: TRIALS.flatMap((trial) => {
           const members = this.ledger.eligiblePeople[String(trial.id)] ?? [];
           if (members.length === 0) return [{ label: trial.code, value: 'empty' }];

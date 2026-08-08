@@ -148,7 +148,7 @@ export class SimulatedProvider implements TrialsProvider {
       },
       {
         title: 'ElegiblePeople',
-        note: 'Public. One pseudonym per enrollment — unlinkable across trials.',
+        note: 'Public. One pseudonym per enrollment, unlinkable across trials.',
         rows: TRIALS.flatMap((trial) => {
           if (!ledger.ElegiblePeople.member(trial.id)) return [];
           const members = [...ledger.ElegiblePeople.lookup(trial.id)];
@@ -164,7 +164,7 @@ export class SimulatedProvider implements TrialsProvider {
       },
       {
         title: 'contractAdmin',
-        note: 'Set at deploy time from the deployer’s secret',
+        note: 'Set at deploy time from the deployer\u2019s secret',
         rows: [{ label: 'key', value: `${toHex(ledger.contractAdmin).slice(0, 16)}…`, mono: true }],
       },
     ];
