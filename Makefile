@@ -16,7 +16,7 @@ MANAGED  := contract/contracts/managed/hello-world/contract/index.js
 SOURCES  := contract/contracts/hello-world.compact contract/contracts/schnorr.compact
 
 .PHONY: help install compile dev build test test-contract typecheck \
-        proof-server proof-server-stop env-up env-down clean
+        proof-server proof-server-stop env-up env-down deploy-preview status-preview clean
 
 help: ## List targets
 	@grep -hE '^[a-z][a-z-]*:.*?## ' $(MAKEFILE_LIST) \
@@ -69,6 +69,12 @@ env-up: ## Start the full local network: node, indexer, proof server
 
 env-down: ## Stop and remove the local network
 	cd contract && docker compose down
+
+deploy-preview: $(MANAGED) contract/node_modules proof-server ## Deploy to the preview testnet
+	cd contract && yarn deploy:preview
+
+status-preview: $(MANAGED) contract/node_modules ## Read the preview deployment's public state
+	cd contract && yarn status:preview
 
 test-contract: $(MANAGED) contract/node_modules ## Integration test against the local network
 	@echo "Requires the local network. Run 'make env-up' first if it is not running."

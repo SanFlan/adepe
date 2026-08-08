@@ -106,22 +106,44 @@ as everyone — and both stop being acceptable the moment this is deployed somew
 
 **The admin secret** is `new Uint8Array(32).fill(1)`, in `app/src/providers/simulated.ts`
 and `app/src/providers/localProofs.ts`. The contract derives `contractAdmin` from
-`getUserSecret()`, so anyone who reads the shipped JavaScript can create trials and register
-issuers on the deployed contract.
+`getUserSecret()`, so anyone who reads the shipped JavaScript would be admin of any contract
+deployed with it. This is fine for the local modes, where the ledger is in memory and there
+is nothing to administer. It is handled for preview: `scripts/deploy.ts` generates its own
+admin secret rather than using this one — see below.
 
-**The issuer's signing key** is a fixed seed in `app/src/lib/issuer.ts`. The clinic's
-private key is in the bundle, so anyone can mint credentials that the contract accepts. In a
-real deployment that key never leaves the clinic and the app only ever receives signatures.
+**The issuer's signing key** is a fixed seed in `app/src/lib/issuer.ts`, and this one is
+still open. The clinic's private key is in the bundle, so anyone can mint credentials the
+contract accepts — including on the preview deployment. It is the more serious of the two,
+because it forges the very attestations the whole design rests on. Closing it needs the
+clinic to sign somewhere the patient's browser cannot reach, which means a service rather
+than a page.
 
-Neither matters while everything runs locally. Both need an answer before a testnet deploy —
-at minimum, an admin secret supplied at runtime rather than compiled in, and an issuer that
-signs somewhere the patient's browser cannot reach.
+## Live on preview
+
+```
+d2141a7567bca6c04d6a9e2b1a5113ca5c382a82270c32009ca8532130142043
+```
+
+Five trials open, one registered issuer. Read the public state yourself, with no wallet and
+no proof server:
+
+```
+make status-preview
+```
+
+That query is exactly what any observer of the chain can run, which is the point: it shows
+counts and pseudonyms, and nothing about who enrolled or why anyone was turned away.
+
+`deployment.preview.json` records the address, the indexer URL, the issuer key and the trial
+ids. To deploy another one, `make deploy-preview` with a funded seed in
+`contract/.env.preview` as `MIDNIGHT_PREVIEW_SEED=…` (that file is gitignored).
+
+The admin secret for this deployment was generated at deploy time rather than taken from the
+app, so the key that can open trials and register issuers is **not** in the shipped
+JavaScript. It is in `contract/.env.preview` as `ADEPE_ADMIN_SECRET`, and nowhere else.
 
 ## Not done yet
 
-- **Deploy to preview.** The Node harness already does deploy → `createTrial` →
-  `registerProvider` → `Verify` against a real network, so this is mostly a funded seed in
-  `contract/.env.preview` as `MIDNIGHT_PREVIEW_SEED=...`.
 - **Lace wiring.** `PreviewProvider` is a stub that reports what it needs.
   `example-bboard`'s `BrowserDeployedBoardManager` is the pattern to follow. Three things to
   weigh first: the proof server stays local, so a shared link still needs Docker;
