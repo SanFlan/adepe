@@ -80,6 +80,12 @@
   }
   .bar__pdf:hover, .bar__pdf:focus-visible { background: var(--accent); color: var(--bg); }
 
+  /* Presenting: the download link is chrome for a reader, noise for an audience. Two
+     selectors because there are two kinds of fullscreen — `:fullscreen` catches the
+     Fullscreen API (the `f` key below), the media query catches the browser's own F11. */
+  :root:fullscreen .bar__pdf { visibility: hidden; }
+  @media (display-mode: fullscreen) { .bar__pdf { visibility: hidden; } }
+
   /* Per-slide copies of the two bars, built by the script and shown only on paper: the
      real bars sit outside the stage and a printed page cannot borrow them. */
   .bar--paper { display: none; }
@@ -497,7 +503,15 @@
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(i - 1); e.preventDefault(); }
       else if (e.key === 'Home') { go(0); }
       else if (e.key === 'End') { go(slides.length - 1); }
+      else if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); e.preventDefault(); }
     });
+
+    // Escape leaves fullscreen on its own, so this only ever has to go one way twice.
+    function toggleFullscreen() {
+      var el = document.documentElement;
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' });
+    }
 
     document.getElementById('stage').addEventListener('click', function (e) {
       if (e.target.closest('a, button')) return;
