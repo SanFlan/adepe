@@ -178,8 +178,13 @@ The app is a static bundle, so it hosts anywhere. It is currently on a
 [sprite](https://sprites.dev):
 
 ```
-https://hackbuenosaires-260808-adepe-fsfr.sprites.app
+https://hackbuenosaires-260808-adepe-fsfr.sprites.app         the app
+https://hackbuenosaires-260808-adepe-fsfr.sprites.app/pitch   the deck
 ```
+
+`pitch.html` sits at the repository root, outside the build, so the deploy script uploads
+it separately and serves it at `/pitch`. That works only because it is a single
+self-contained file.
 
 Deploy or redeploy with:
 

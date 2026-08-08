@@ -68,14 +68,19 @@ else
   sprite create -skip-console "$sprite" >/dev/null
 fi
 
+# `pitch.html` lives at the repository root rather than in the app, so the build does not
+# carry it. It goes up alongside the bundle and is served at /pitch, which only works
+# because it is one self-contained file with no assets of its own.
 echo "==> uploading"
 sprite exec -s "$sprite" \
   -file "$tarball:/home/sprite/dist.tgz" \
   -file "$root/scripts/serve.mjs:/home/sprite/serve.mjs" \
+  -file "$root/pitch.html:/home/sprite/pitch.html" \
   sh -lc "
     set -e
-    rm -rf $remote && mkdir -p $remote
+    rm -rf $remote && mkdir -p $remote/pitch
     tar xzf /home/sprite/dist.tgz -C $remote 2>/dev/null
+    mv /home/sprite/pitch.html $remote/pitch/index.html
     rm -f /home/sprite/dist.tgz
   "
 
@@ -107,14 +112,32 @@ url=$(sprite url -s "$sprite" | awk '/^URL:/ { print $2 }')
 # service and the service found the files. Anything else and the deploy did not land.
 echo "==> verifying $url"
 code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 60 "$url/")
-if [ "$code" = 200 ]; then
-  echo "    ok"
-elif [ "$code" = 302 ] && [ "$public" != true ]; then
+if [ "$code" = 302 ] && [ "$public" != true ]; then
   echo "    ok (redirect to sign-in: the URL is private, pass --public to open it)"
-else
+  echo
+  echo "$url"
+  exit 0
+fi
+if [ "$code" != 200 ]; then
   echo "    unexpected response $code" >&2
+  exit 1
+fi
+echo "    app  ok"
+
+# Not a status check. Unresolved paths fall back to the app shell, so a missing pitch would
+# answer 200 just as happily -- only the content tells the two apart.
+#
+# The body is captured before matching rather than piped into `grep -q`: under `pipefail`
+# that pipeline fails on success, because grep exits at the first match and curl then dies
+# of SIGPIPE.
+pitch=$(curl -sS --max-time 60 "$url/pitch")
+if printf '%s' "$pitch" | grep -q 'ensayos'; then
+  echo "    pitch ok"
+else
+  echo "    /pitch did not serve the pitch page" >&2
   exit 1
 fi
 
 echo
 echo "$url"
+echo "$url/pitch"

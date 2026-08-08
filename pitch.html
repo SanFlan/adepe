@@ -6,7 +6,13 @@
    * weights 400/700 only, -0.02em tracking. The deck is the app seen from further away.
    */
 
+  /*
+   * Light only, deliberately. This is a deck: it is shown on a projector and screenshotted,
+   * and both want one predictable ground rather than whatever the presenting machine
+   * happens to prefer. `color-scheme` keeps the scrollbar and form controls light too.
+   */
   :root {
+    color-scheme: light;
     --accent: #1884e6;
     --accent-quiet: #9dc9f2;
     --ink: #000;
@@ -15,24 +21,6 @@
     --sans: "GT America Standard", "Helvetica Neue", Helvetica, "Yu Gothic", YuGothic,
       -apple-system, BlinkMacSystemFont, "Hiragino Sans", meiryo, sans-serif;
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --accent: #5aa9f7;
-      --accent-quiet: #2b5c85;
-      --ink: #f4f4f6;
-      --bg: #0a0a0c;
-      --fill: #15161a;
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --accent: #5aa9f7;
-    --accent-quiet: #2b5c85;
-    --ink: #f4f4f6;
-    --bg: #0a0a0c;
-    --fill: #15161a;
   }
 
   * { box-sizing: border-box; }
@@ -181,13 +169,7 @@
     background: transparent; cursor: pointer; border-radius: 0;
   }
   .dot[aria-current="true"] { background: var(--accent); }
-  .dot:focus-visible, .theme:focus-visible { outline: solid 2px var(--accent); outline-offset: 2px; }
-
-  .theme {
-    font: inherit; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
-    color: var(--accent); background: transparent; border: solid 1px var(--accent);
-    padding: 0.15em 0.6em; cursor: pointer; border-radius: 0;
-  }
+  .dot:focus-visible { outline: solid 2px var(--accent); outline-offset: 2px; }
 
   @media (max-width: 720px) {
     .cols--3, .cols--5, .cols--2 { grid-template-columns: 1fr; }
@@ -401,8 +383,7 @@
 
   <div class="bar bar--bottom">
     <div class="dots" id="dots"></div>
-    <span class="counter" id="counter">01 / 10</span>
-    <!-- <button class="theme" id="theme" type="button">Theme</button> -->
+    <span class="counter" id="counter">01 / 08</span>
   </div>
 </div>
 
@@ -445,13 +426,6 @@
     document.getElementById('stage').addEventListener('click', function (e) {
       if (e.target.closest('a, button')) return;
       go(i + (e.clientX < window.innerWidth / 3 ? -1 : 1));
-    });
-
-    document.getElementById('theme').addEventListener('click', function () {
-      var now = document.documentElement.getAttribute('data-theme');
-      var dark = now ? now === 'dark'
-        : window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
     });
 
     go(parseInt((location.hash || '#1').slice(1), 10) - 1 || 0);
