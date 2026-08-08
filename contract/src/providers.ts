@@ -6,7 +6,12 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { type MidnightWalletProvider } from './wallet.js';
 import { type NetworkConfig } from './config.js';
 
-export type HelloWorldCircuits = 'storeMessage';
+/** Must match the proving circuits in `hello-world.compact`; used to locate zk config. */
+export type HelloWorldCircuits =
+  | 'registerProvider'
+  | 'removeProvider'
+  | 'createTrial'
+  | 'Verify';
 
 export type HelloWorldProviders = MidnightProviders<any>;
 

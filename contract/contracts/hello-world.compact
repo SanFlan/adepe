@@ -4,16 +4,26 @@ import CompactStandardLibrary;
 
 import "schnorr" prefix Schnorr_;
 
-export enum BoolRestrictions {
-  NIVOLUMAB_COUNTER_INDICATION,
-  IPILINUMAB_COUNTER_INDICATION,
-  ACTIVE_AUTOIMMUNE_DISEASE,
-  CHEMOTHERAPY,
-  IMMUNOTHERAPY
-}
-
-export enum MinMaxRestrictions {
-  AGE,
+// A trial's eligibility criteria, as one value.
+//
+// This began as two ledgers of nested maps keyed by BoolRestrictions/MinMaxRestrictions
+// enums. That shape cannot be written to on a real network: a circuit that does
+// `outerMap.lookup(k).insert(...)` produces a transcript the proof server rejects with
+// "Public transcript input mismatch", whether or not the inner map already exists. Inner
+// *Set* writes are fine -- which is why Verify's `ElegiblePeople.lookup(id).insert(pk)`
+// still works -- but inner *Map* writes are not. Flattening to a struct means createTrial
+// performs a single top-level insert, which proves cleanly.
+//
+// The booleans are compared for equality in Verify, so each states the value a
+// participant must have. There is no "don't care".
+export struct TrialCriteria {
+  ageMin: Uint<32>;
+  ageMax: Uint<32>;
+  nivolumab_counterindication: Boolean;
+  ipilinumab_counterindication: Boolean;
+  active_autoimmune_therapy: Boolean;
+  chemotherapy: Boolean;
+  immunotherapy: Boolean;
 }
 
 struct MedicalHistory {
@@ -29,8 +39,7 @@ new type UserPublicKey = Bytes<32>;
 new type UserSecretKey = Bytes<32>;
 new type AdminPublicKey = Bytes<32>;
 
-export ledger TrialBoolRestrictions: Map<Uint<32>, Map<BoolRestrictions, Boolean>>;
-export ledger TrialMinMaxRestrictions: Map<Uint<32>, Map<MinMaxRestrictions, [Uint<32>, Uint<32>]>>;
+export ledger TrialRestrictions: Map<Uint<32>, TrialCriteria>;
 export ledger ElegiblePeople: Map<Uint<32>, Set<UserPublicKey>>;
 
 export ledger contractAdmin: AdminPublicKey;
@@ -39,12 +48,27 @@ export ledger providers: Set<JubjubPoint>;
 witness getUserSecret(): UserSecretKey;
 witness getWitnessMedicalHistory(): [MedicalHistory, Schnorr_SchnorrSignature, JubjubPoint];
 
-pure circuit publicKey(_sk: UserSecretKey): UserPublicKey {
-  const hash = persistentHash<[Bytes<32>,UserSecretKey]>([
+// The enrollment pseudonym, derived per trial.
+//
+// trialID is mixed into the hash so that a patient enrolled in several trials appears
+// under an unrelated key in each ElegiblePeople set. ElegiblePeople is public, so a
+// trial-independent key would let any observer join the sets and reconstruct one
+// patient's full trial history. Deduplication still works: the derivation is
+// deterministic, so re-running Verify for the same (patient, trial) re-inserts the same
+// key into the same set, which is a no-op.
+pure circuit publicKey(_sk: UserSecretKey, trialID: Uint<32>): UserPublicKey {
+  const hash = persistentHash<[Bytes<32>, UserSecretKey, Uint<32>]>([
     pad(32, "midnight:auth:pk"),
-    _sk
+    _sk,
+    trialID
   ]) as UserPublicKey;
   return hash;
+}
+
+// Exposed so a client can look itself up in ElegiblePeople without re-running Verify.
+// Takes only the caller's own secret, so it discloses nothing they do not already hold.
+export pure circuit enrollmentKey(sk: UserSecretKey, trialID: Uint<32>): UserPublicKey {
+  return publicKey(sk, trialID);
 }
 
 export pure circuit deriveAdminPublicKey(sk: UserSecretKey): AdminPublicKey {
@@ -69,6 +93,37 @@ export circuit removeProvider(providerPk: JubjubPoint): [] {
     providers.remove(disclose(providerPk));
 }
 
+// Open a trial and fix its eligibility criteria.
+//
+// One top-level insert of a struct value. Verify reads every field unconditionally, so a
+// trial is either fully specified here or it does not exist.
+export circuit createTrial(
+  trialID: Uint<32>,
+  ageMin: Uint<32>,
+  ageMax: Uint<32>,
+  nivolumab: Boolean,
+  ipilinumab: Boolean,
+  autoimmune: Boolean,
+  chemo: Boolean,
+  immuno: Boolean
+): [] {
+  assert(contractAdmin == deriveAdminPublicKey(getUserSecret()), "Only admin can create trials");
+  assert(!TrialRestrictions.member(disclose(trialID)), "Trial already exists");
+  assert(disclose(ageMin) <= disclose(ageMax), "Empty age range");
+
+  TrialRestrictions.insert(disclose(trialID), TrialCriteria {
+    ageMin: disclose(ageMin),
+    ageMax: disclose(ageMax),
+    nivolumab_counterindication: disclose(nivolumab),
+    ipilinumab_counterindication: disclose(ipilinumab),
+    active_autoimmune_therapy: disclose(autoimmune),
+    chemotherapy: disclose(chemo),
+    immunotherapy: disclose(immuno)
+  });
+
+  ElegiblePeople.insertDefault(disclose(trialID));
+}
+
 export circuit Verify(trialID: Uint<32>) : [] {
   
   const [MedicalHistory, signature, providerPk] = getWitnessMedicalHistory();
@@ -86,21 +141,24 @@ export circuit Verify(trialID: Uint<32>) : [] {
     return;
   }
 
-  const agemax_bad = MedicalHistory.age > TrialMinMaxRestrictions.lookup(trialID).lookup(MinMaxRestrictions.AGE)[0];
-  const agemin_bad = MedicalHistory.age < TrialMinMaxRestrictions.lookup(trialID).lookup(MinMaxRestrictions.AGE)[1];
-  const nivolumab_bad = MedicalHistory.nivolumab_counterindication != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.NIVOLUMAB_COUNTER_INDICATION);
-  const ipilinumab_bad = MedicalHistory.ipilinumab_counterindication != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.IPILINUMAB_COUNTER_INDICATION);
-  const autoimmune_bad = MedicalHistory.active_autoimmune_therapy != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.ACTIVE_AUTOIMMUNE_DISEASE);
-  const chemo_bad = MedicalHistory.chemotherapy != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.CHEMOTHERAPY);
-  const immune_bad = MedicalHistory.immunotherapy != TrialBoolRestrictions.lookup(trialID).lookup(BoolRestrictions.IMMUNOTHERAPY);
-  
+  // trialID is a public argument, and which trial is being applied to is visible on
+  // chain regardless; only the medical history stays private.
+  const criteria = TrialRestrictions.lookup(disclose(trialID));
+  const agemin_bad = MedicalHistory.age < criteria.ageMin;
+  const agemax_bad = MedicalHistory.age > criteria.ageMax;
+  const nivolumab_bad = MedicalHistory.nivolumab_counterindication != criteria.nivolumab_counterindication;
+  const ipilinumab_bad = MedicalHistory.ipilinumab_counterindication != criteria.ipilinumab_counterindication;
+  const autoimmune_bad = MedicalHistory.active_autoimmune_therapy != criteria.active_autoimmune_therapy;
+  const chemo_bad = MedicalHistory.chemotherapy != criteria.chemotherapy;
+  const immune_bad = MedicalHistory.immunotherapy != criteria.immunotherapy;
+
   const ret = agemax_bad||agemin_bad||nivolumab_bad||ipilinumab_bad||autoimmune_bad||chemo_bad||immune_bad;
   if (disclose(ret)) {
     return;
   }
 
   const sk = getUserSecret();
-  const pk = publicKey(sk);
+  const pk = publicKey(sk, trialID);
 
   ElegiblePeople.lookup(trialID).insert(disclose(pk));
 }

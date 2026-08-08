@@ -21,7 +21,10 @@ module schnorr {
 
   // The witness provides the quotient and remainder of dividing the challenge hash
   // by 2^248, so we can truncate it to fit in Jubjub's scalar field.
-  witness getSchnorrReduction(challengeHash: Field): [Field, Uint<248>];
+  //
+  // The quotient is Uint<7>, not Field. This is load-bearing: see the range check in
+  // schnorrVerify below.
+  witness getSchnorrReduction(challengeHash: Field): [Uint<7>, Uint<248>];
 
   export circuit schnorrVerify<#n>(
                    msg: Vector<n, Field>,
@@ -45,7 +48,14 @@ module schnorr {
     const TWO_248: Field =
             452312848583266388373324160190187140051835877600158453279131187530910662656 as Field;
     const [q, cTruncated] = getSchnorrReduction(cFull);
-    assert(disclose(q) * TWO_248 + (disclose(cTruncated) as Field) == cFull,
+    // Bounding q is what makes the reduction sound. `q * 2^248 + r == cFull` is an
+    // equation in the BLS12-381 scalar field, so without a bound on q a malicious
+    // prover can pick *any* r < 2^248 and solve q = (cFull - r) * (2^248)^-1 mod p.
+    // A solution always exists, so r -- the challenge -- would be attacker-chosen and
+    // forging a signature is trivial: pick c and s, then set R = G*s - pk*c.
+    // floor(p / 2^248) == 115, so q < 116 admits exactly one (q, r) pair.
+    assert(disclose(q) < 116, "Schnorr quotient out of range");
+    assert((disclose(q) as Field) * TWO_248 + (disclose(cTruncated) as Field) == cFull,
            "Invalid challenge reduction"
            );
     const c: Field = disclose(cTruncated) as Field;
