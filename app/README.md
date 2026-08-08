@@ -17,26 +17,52 @@ cd ../app && npm install && npm run dev
 `npm run dev`, `build` and `test` all check for the compiled contract first and tell you
 what to run if it is missing.
 
-## The three modes
+## The four modes
 
 Switch between them in the header. The views are written against a single
 `TrialsProvider` interface (`src/providers/types.ts`), so what changes is only what is
 real underneath.
 
-| Mode | Signatures | Eligibility check | Ledger |
+Each step adds exactly one thing to the one before it.
+
+| Mode | Circuits | Proofs | Ledger |
 | --- | --- | --- | --- |
-| **Mocked** | real | TypeScript | `localStorage` object |
-| **Simulated** | real | the real compiled circuit | in-memory, real runtime |
-| **Testnet** | — | — | not wired yet |
+| **Mocked** | TypeScript stand-in | none | `localStorage` object |
+| **Simulated** | real, in-process | none | in-memory |
+| **Local proofs** | real, in-process | **real**, local proof server | in-memory |
+| **Preview testnet** | real | real | the chain — not wired yet |
+
+Signatures are real in every mode.
 
 Simulated mode runs the actual circuits through the Compact runtime, so every `assert`
 in `hello-world.compact` fires exactly as it would on chain. The only thing missing is
-proof generation, which is what separates it from testnet.
+proof generation, which is what separates it from local-proofs mode.
 
 Mocked mode fakes the ledger but **not** the cryptography: the issuer's Schnorr signature
 is produced and verified with the same code the circuit's transcript is built from, and
 pseudonyms come from the contract's own `enrollmentKey`. It is honest about who signed
 what, and dishonest only about proving it to anyone else.
+
+### Local proofs
+
+Every call builds an unproven transaction and sends it to a proof server, which generates
+a genuine proof against the compiled circuit's proving key. What is skipped is everything
+after: no wallet balances it, no node accepts it, no indexer reports it — the resulting
+contract state is adopted in memory instead. The proof is generated and then discarded;
+its only role is to demonstrate the circuit is satisfiable with those private inputs.
+
+It needs Docker but no wallet and no funded account:
+
+```
+cd ../contract && docker compose up -d --wait proof-server
+```
+
+The proving keys are served from `public/zk`, refreshed by `npm run sync:zk` on every
+dev/build so they cannot go stale against a recompiled contract. Point elsewhere with
+`VITE_PROOF_SERVER=http://host:6300 npm run dev`.
+
+This is the step that makes the cost visible: proving takes a real second or so, which
+every other local mode hides.
 
 ## What is actually signed
 
@@ -78,7 +104,7 @@ with it — `src/lib/schnorr6.test.ts` runs the real circuit to keep the two hon
 ## Tests
 
 ```
-npm test        # 32 tests
+npm test        # 43 tests (6 need a proof server)
 npm run typecheck
 ```
 
@@ -93,6 +119,10 @@ The ones that matter:
 - `src/providers/providers.test.ts` — holds mocked and simulated to the same assertions,
   since the promise of the mode switcher is that they behave identically.
 - `src/App.test.tsx` — walks the demo path: sign a record, apply, get enrolled.
+- `src/providers/localProofs.test.ts` — drives the local-proofs provider against a real
+  proof server. **Skipped** (not silently passed) when the server is unreachable, so a
+  green run without it visibly reports 6 skipped. `ADEPE_REQUIRE_PROOF_SERVER=1` turns
+  that into a failure.
 
 ## Two things that only show up on a real network
 
@@ -116,6 +146,6 @@ neither is catchable by the in-memory tests:
 
 ```
 src/lib/         framework-free: signing, records, trials, profiles, the simulator
-src/providers/   the three backings behind one interface
+src/providers/   the four backings behind one interface
 src/views/       React views
 ```

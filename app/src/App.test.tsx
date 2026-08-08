@@ -124,7 +124,7 @@ describe('App', () => {
     await render();
     const select = container.querySelector('select')!;
     await act(async () => {
-      select.value = 'testnet';
+      select.value = 'preview';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
     await act(async () => {

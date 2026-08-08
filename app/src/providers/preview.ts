@@ -1,5 +1,5 @@
 /**
- * Preview network. Not wired yet.
+ * The Preview testnet, through a connected Lace wallet. Not wired yet.
  *
  * This exists as a real module rather than a missing case so the mode switcher stays
  * honest: selecting Testnet reports precisely what is missing instead of throwing.
@@ -23,10 +23,10 @@ import type {
 } from './types.js';
 
 const UNAVAILABLE =
-  'Testnet needs a connected wallet, a running proof server and a deployed contract address.';
+  'Preview needs a connected Lace wallet, a running proof server and a deployed contract address.';
 
-export class TestnetProvider implements TrialsProvider {
-  readonly mode = 'testnet' as const;
+export class PreviewProvider implements TrialsProvider {
+  readonly mode = 'preview' as const;
 
   status(): ProviderStatus {
     return { ready: false, detail: UNAVAILABLE };

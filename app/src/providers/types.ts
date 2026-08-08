@@ -10,8 +10,14 @@
 import type { Profile } from '../lib/profiles.js';
 import type { Trial } from '../lib/trials.js';
 
-export type Mode = 'mocked' | 'simulated' | 'testnet';
+export type Mode = 'mocked' | 'simulated' | 'proofs' | 'preview';
 
+/**
+ * The four modes, in order of how much of the real system each one runs.
+ *
+ * Each step adds exactly one thing: `simulated` adds the circuits, `proofs` adds proof
+ * generation, `preview` adds a wallet and a chain.
+ */
 export const MODES: ReadonlyArray<{ id: Mode; label: string; blurb: string }> = [
   {
     id: 'mocked',
@@ -24,9 +30,15 @@ export const MODES: ReadonlyArray<{ id: Mode; label: string; blurb: string }> = 
     blurb: 'The real compiled circuits run locally. Every assert fires; the proof is skipped.',
   },
   {
-    id: 'testnet',
-    label: 'Testnet',
-    blurb: 'Preview network, via a wallet and a proof server.',
+    id: 'proofs',
+    label: 'Local proofs',
+    blurb:
+      'Real zero-knowledge proofs from a local proof server. Nothing is submitted anywhere.',
+  },
+  {
+    id: 'preview',
+    label: 'Preview testnet',
+    blurb: 'The Preview network, through a connected Lace wallet.',
   },
 ];
 

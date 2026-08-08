@@ -6,11 +6,12 @@
  * generation is skipped -- which is the whole difference between this and `testnet`.
  */
 
-import { pureCircuits, type AdepePrivateState, type Credential } from '../lib/contract.js';
+import { pureCircuits, type AdepePrivateState } from '../lib/contract.js';
 import { AdepeSimulator } from '../lib/simulator.js';
 import { ISSUER_NAME, formatPoint, issuerPublicKey } from '../lib/issuer.js';
 import { hexToBytes, type Profile } from '../lib/profiles.js';
 import { TRIALS, isEligible, trialById } from '../lib/trials.js';
+import { toCredential } from './credential.js';
 import type {
   EnrollResult,
   LedgerPanel,
@@ -23,25 +24,6 @@ import type {
 const ADMIN_STATE: AdepePrivateState = {
   userSecret: new Uint8Array(32).fill(1),
   credential: null,
-};
-
-const toCredential = (profile: Profile): Credential | null => {
-  const stored = profile.credential;
-  if (stored === null) return null;
-  return {
-    history: stored.history,
-    signature: {
-      announcement: {
-        x: BigInt(stored.signature.announcement.x),
-        y: BigInt(stored.signature.announcement.y),
-      },
-      response: BigInt(stored.signature.response),
-    },
-    issuerPublicKey: {
-      x: BigInt(stored.issuerPublicKey.x),
-      y: BigInt(stored.issuerPublicKey.y),
-    },
-  };
 };
 
 const toHex = (bytes: Uint8Array) =>

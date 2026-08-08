@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MockedProvider } from './providers/mocked.js';
 import { SimulatedProvider } from './providers/simulated.js';
-import { TestnetProvider } from './providers/testnet.js';
+import { LocalProofsProvider } from './providers/localProofs.js';
+import { PreviewProvider } from './providers/preview.js';
+import { BrowserZkConfigProvider } from './lib/zk-config.js';
 import { MODES, type Mode, type TrialsProvider } from './providers/types.js';
 import {
   ARCHETYPES,
@@ -20,12 +22,28 @@ import { LedgerDrawer } from './views/LedgerDrawer.js';
 
 type Tab = 'trials' | 'credential' | 'issuer' | 'overview';
 
-const makeProvider = (mode: Mode): TrialsProvider =>
-  mode === 'mocked'
-    ? new MockedProvider()
-    : mode === 'simulated'
-      ? new SimulatedProvider()
-      : new TestnetProvider();
+/**
+ * Where the browser fetches proving keys, and where it sends them to be proved.
+ *
+ * Both are overridable so the same build can point at a proof server that is not on
+ * localhost, without a rebuild.
+ */
+const ZK_BASE = `${window.location.origin}/zk`;
+const PROOF_SERVER =
+  (import.meta.env['VITE_PROOF_SERVER'] as string | undefined) ?? 'http://127.0.0.1:6300';
+
+const makeProvider = (mode: Mode): TrialsProvider => {
+  switch (mode) {
+    case 'mocked':
+      return new MockedProvider();
+    case 'simulated':
+      return new SimulatedProvider();
+    case 'proofs':
+      return new LocalProofsProvider(new BrowserZkConfigProvider(ZK_BASE), PROOF_SERVER);
+    case 'preview':
+      return new PreviewProvider();
+  }
+};
 
 export const App = () => {
   const [mode, setMode] = useState<Mode>('mocked');
