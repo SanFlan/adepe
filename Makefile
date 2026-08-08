@@ -17,7 +17,7 @@ SOURCES  := contract/contracts/hello-world.compact contract/contracts/schnorr.co
 
 .PHONY: help install compile dev build test test-contract typecheck \
         proof-server proof-server-stop env-up env-down deploy-preview status-preview \
-        deploy-sprite clean
+        deploy-sprite pitch-pdf clean
 
 help: ## List targets
 	@grep -hE '^[a-z][a-z-]*:.*?## ' $(MAKEFILE_LIST) \
@@ -78,6 +78,9 @@ status-preview: $(MANAGED) contract/node_modules ## Read the preview deployment'
 	cd contract && yarn status:preview
 
 # ------------------------------------------------------------------- hosting
+
+pitch-pdf: ## Render pitch.html to pitch.pdf (eight 16:9 pages)
+	./scripts/pitch-pdf.sh
 
 SPRITE ?=
 

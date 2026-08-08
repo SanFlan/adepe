@@ -180,11 +180,17 @@ The app is a static bundle, so it hosts anywhere. It is currently on a
 ```
 https://hackbuenosaires-260808-adepe-fsfr.sprites.app         the app
 https://hackbuenosaires-260808-adepe-fsfr.sprites.app/pitch   the deck
+https://hackbuenosaires-260808-adepe-fsfr.sprites.app/pitch/pitch.pdf   the deck as a PDF
 ```
 
 `pitch.html` sits at the repository root, outside the build, so the deploy script uploads
 it separately and serves it at `/pitch`. That works only because it is a single
 self-contained file.
+
+`pitch.pdf` is that same file printed — eight landscape 16:9 pages, one per slide, from the
+deck's own `@media print` rules. `make pitch-pdf` renders it with headless Chrome, and the
+deploy re-renders it every time so the deck and the PDF cannot drift apart. The deck links
+to it from the middle of its top bar.
 
 Deploy or redeploy with:
 

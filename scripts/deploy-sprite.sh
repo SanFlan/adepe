@@ -70,17 +70,31 @@ fi
 
 # `pitch.html` lives at the repository root rather than in the app, so the build does not
 # carry it. It goes up alongside the bundle and is served at /pitch, which only works
-# because it is one self-contained file with no assets of its own.
+# because it is one self-contained file with no assets of its own. `pitch.pdf` is that same
+# deck printed (scripts/pitch-pdf.sh) and lands beside it, because the deck's download link
+# is relative: /pitch/pitch.pdf.
+#
+# It is re-rendered on every deploy rather than trusted from the checkout, so an edited
+# slide cannot ship a deck and a PDF that disagree. Needing Chrome is not worth failing a
+# deploy over, though: without it the committed PDF goes up as-is, loudly.
+echo "==> rendering pitch.pdf"
+if ! "$root/scripts/pitch-pdf.sh" >/dev/null; then
+  [ -f "$root/pitch.pdf" ] || { echo "    could not render, and no pitch.pdf to fall back on" >&2; exit 1; }
+  echo "    could not render; deploying the committed pitch.pdf, which may be stale" >&2
+fi
+
 echo "==> uploading"
 sprite exec -s "$sprite" \
   -file "$tarball:/home/sprite/dist.tgz" \
   -file "$root/scripts/serve.mjs:/home/sprite/serve.mjs" \
   -file "$root/pitch.html:/home/sprite/pitch.html" \
+  -file "$root/pitch.pdf:/home/sprite/pitch.pdf" \
   sh -lc "
     set -e
     rm -rf $remote && mkdir -p $remote/pitch
     tar xzf /home/sprite/dist.tgz -C $remote 2>/dev/null
     mv /home/sprite/pitch.html $remote/pitch/index.html
+    mv /home/sprite/pitch.pdf $remote/pitch/pitch.pdf
     rm -f /home/sprite/dist.tgz
   "
 
@@ -138,6 +152,17 @@ else
   exit 1
 fi
 
+# Same trap as above, one level worse: the SPA fallback would answer a missing PDF with
+# HTML and a 200. The content type is what tells them apart.
+type=$(curl -sS -o /dev/null -w '%{content_type}' --max-time 60 "$url/pitch/pitch.pdf")
+if [ "${type%%;*}" = "application/pdf" ]; then
+  echo "    pdf   ok"
+else
+  echo "    /pitch/pitch.pdf served $type, not a PDF" >&2
+  exit 1
+fi
+
 echo
 echo "$url"
 echo "$url/pitch"
+echo "$url/pitch/pitch.pdf"
