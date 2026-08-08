@@ -1,0 +1,33 @@
+{
+  "network": "preview",
+  "networkId": "preview",
+  "contractAddress": "d2141a7567bca6c04d6a9e2b1a5113ca5c382a82270c32009ca8532130142043",
+  "deployedAt": "2026-08-08T14:14:08.290Z",
+  "indexer": "https://indexer.preview.midnight.network/api/v4/graphql",
+  "issuerPublicKey": {
+    "x": "44287164993509582334477798857411738996996402081158719108497069301579673639161",
+    "y": "13873356800655809099641716552849337598853624765139177219610087117052901009897"
+  },
+  "trials": [
+    {
+      "id": 1,
+      "code": "HORIZON-1"
+    },
+    {
+      "id": 2,
+      "code": "MERIDIAN-2"
+    },
+    {
+      "id": 3,
+      "code": "SOLSTICE-3"
+    },
+    {
+      "id": 4,
+      "code": "KEYSTONE-4"
+    },
+    {
+      "id": 5,
+      "code": "VANGUARD-5"
+    }
+  ]
+}

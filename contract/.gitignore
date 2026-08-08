@@ -5,3 +5,9 @@
 # Compiler output: regenerate with `yarn compile`. The prover/verifier keys alone are
 # several MB, and they are reproducible from the .compact sources.
 /contracts/managed/
+
+# Funded wallet seeds. Never commit these.
+.env
+.env.*
+# ...except the template, which holds no values.
+!.env.example

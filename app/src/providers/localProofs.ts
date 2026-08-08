@@ -25,12 +25,14 @@ import {
   ZswapChainState,
   ZswapSecretKeys,
 } from '@midnight-ntwrk/midnight-js-protocol/ledger';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import type { ProofProvider, ZKConfigProvider } from '@midnight-ntwrk/midnight-js-types';
 
-import { Contract, ledger, pureCircuits, type AdepePrivateState } from '../lib/contract.js';
+import { Contract, ledger, type AdepePrivateState } from '../lib/contract.js';
 import { CompiledAdepeContract, type AdepeCircuitId } from '../lib/compiled.js';
 import { adepeWitnesses } from '../lib/witnesses.js';
-import { issuerPublicKey, formatPoint } from '../lib/issuer.js';
+import { issuerPublicKey } from '../lib/issuer.js';
+import { isEnrolledIn, ledgerPanels, trialStates } from '../lib/ledger-view.js';
 import { hexToBytes, type Profile } from '../lib/profiles.js';
 import { TRIALS, isEligible, trialById } from '../lib/trials.js';
 import { toCredential } from './credential.js';
@@ -55,9 +57,6 @@ const ADMIN_STATE: AdepePrivateState = {
  */
 const CONTRACT_ADDRESS = '0'.repeat(64);
 const ZSWAP_KEYS = ZswapSecretKeys.fromSeed(new Uint8Array(32).fill(5));
-
-const toHex = (bytes: Uint8Array) =>
-  Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 export class LocalProofsProvider implements TrialsProvider {
   readonly mode = 'proofs' as const;
@@ -92,6 +91,7 @@ export class LocalProofsProvider implements TrialsProvider {
   async init(): Promise<void> {
     if (this.contractState !== null) return;
 
+    setNetworkId('undeployed');
     const { currentContractState } = this.contract.initialState(
       createConstructorContext(ADMIN_STATE, CONTRACT_ADDRESS),
     );
@@ -181,21 +181,11 @@ export class LocalProofsProvider implements TrialsProvider {
   }
 
   listTrials(): readonly TrialState[] {
-    const view = this.ledgerView();
-    return TRIALS.map((trial) => ({
-      trial,
-      open: view?.ElegiblePeople.member(trial.id) ?? false,
-      enrolledCount: view?.ElegiblePeople.member(trial.id)
-        ? Number(view.ElegiblePeople.lookup(trial.id).size())
-        : 0,
-    }));
+    return trialStates(this.ledgerView());
   }
 
   isEnrolled(profile: Profile, trialId: bigint): boolean {
-    const view = this.ledgerView();
-    if (view === null || !view.ElegiblePeople.member(trialId)) return false;
-    const key = pureCircuits.enrollmentKey(hexToBytes(profile.userSecret), trialId);
-    return view.ElegiblePeople.lookup(trialId).member(key);
+    return isEnrolledIn(this.ledgerView(), profile.userSecret, trialId);
   }
 
   async enroll(profile: Profile, trialId: bigint): Promise<EnrollResult> {
@@ -243,10 +233,7 @@ export class LocalProofsProvider implements TrialsProvider {
   }
 
   ledgerPanels(): readonly LedgerPanel[] {
-    const view = this.ledgerView();
-    if (view === null) return [];
-
-    return [
+    return ledgerPanels(this.ledgerView(), [
       {
         title: 'proving',
         note: `Proof server at ${this.proofServerUrl}. Proofs are generated, then discarded. There is no chain to submit them to.`,
@@ -257,30 +244,7 @@ export class LocalProofsProvider implements TrialsProvider {
           },
         ],
       },
-      {
-        title: 'providers',
-        note: 'Issuers the contract will accept signatures from',
-        rows: [...view.providers].map((point, index) => ({
-          label: `#${index}`,
-          value: formatPoint(point),
-          mono: true,
-        })),
-      },
-      {
-        title: 'ElegiblePeople',
-        note: 'Public. One pseudonym per enrollment, unlinkable across trials.',
-        rows: TRIALS.flatMap((trial) => {
-          if (!view.ElegiblePeople.member(trial.id)) return [];
-          const members = [...view.ElegiblePeople.lookup(trial.id)];
-          if (members.length === 0) return [{ label: trial.code, value: 'empty' }];
-          return members.map((key, index) => ({
-            label: `${trial.code} #${index}`,
-            value: `${toHex(key).slice(0, 12)}…`,
-            mono: true,
-          }));
-        }),
-      },
-    ];
+    ]);
   }
 
   static predictEligibility = isEligible;

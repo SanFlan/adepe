@@ -10,6 +10,7 @@
  * State persists in localStorage so a reload mid-demo does not lose the enrollments.
  */
 
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { pureCircuits } from '../lib/contract.js';
 import { issuerPublicKey } from '../lib/issuer.js';
 import { hexToBytes, type Profile } from '../lib/profiles.js';
@@ -57,6 +58,7 @@ export class MockedProvider implements TrialsProvider {
   }
 
   async init(): Promise<void> {
+    setNetworkId('undeployed');
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === null) {
       this.persist();

@@ -1,11 +1,18 @@
 /**
  * The demo issuer: a clinic that attests to patients' medical histories.
  *
- * On a real deployment this key would live inside the provider's own systems and never
- * touch a patient's browser. Here it is a fixed seed so the public key is stable across
- * reloads and the admin can register it once. Keeping the issuer visible in the UI is
- * deliberate -- it is the reason the contract trusts anything at all, and hiding it would
- * make the demo look like patients self-certify.
+ * On a real deployment this key lives inside the provider's own systems and never touches a
+ * patient's browser: the app would send a record to the clinic and receive a signature
+ * back. Here the browser signs, because there is no clinic to ask.
+ *
+ * The seed comes from VITE_ISSUER_SEED when set, so it need not be committed and a
+ * deployment can use its own. **This does not make it secret.** Vite inlines every VITE_*
+ * variable into the bundle at build time, so the key ships to every visitor either way and
+ * anyone can mint credentials the contract accepts. Moving it out of source control is
+ * hygiene, not a fix; the fix is a service that holds the key.
+ *
+ * Keeping the issuer visible in the UI is deliberate. It is the reason the contract trusts
+ * anything at all, and hiding it would make the demo look like patients self-certify.
  */
 
 import { historyToMessage, type MedicalHistory } from './record.js';
@@ -17,7 +24,25 @@ import {
   type SchnorrSignature,
 } from './schnorr6.js';
 
-const ISSUER_SEED = new Uint8Array(32).fill(2);
+/** Used when VITE_ISSUER_SEED is unset, so a fresh clone runs with no configuration. */
+const DEMO_SEED = new Uint8Array(32).fill(2);
+
+const seedFromEnv = (): Uint8Array => {
+  const configured = (import.meta.env['VITE_ISSUER_SEED'] as string | undefined)?.trim();
+  if (configured === undefined || configured === '') return DEMO_SEED;
+
+  if (!/^[0-9a-fA-F]{64}$/.test(configured)) {
+    // Falling back silently would produce credentials the contract rejects, with nothing
+    // pointing at the typo that caused it.
+    throw new Error('VITE_ISSUER_SEED must be 64 hex characters (32 bytes, no 0x prefix).');
+  }
+  return new Uint8Array((configured.match(/../g) ?? []).map((byte) => parseInt(byte, 16)));
+};
+
+const ISSUER_SEED = seedFromEnv();
+
+/** Whether the issuer is the built-in demo one. Shown in the UI so it is never a surprise. */
+export const usingDemoIssuerKey = ISSUER_SEED === DEMO_SEED;
 
 export const ISSUER_NAME = 'Northgate Oncology';
 

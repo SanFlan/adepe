@@ -38,7 +38,8 @@ export const MODES: ReadonlyArray<{ id: Mode; label: string; blurb: string }> = 
   {
     id: 'preview',
     label: 'Preview testnet',
-    blurb: 'The Preview network, through a connected Lace wallet.',
+    blurb:
+      'The deployed contract on Preview, through a connected Lace wallet. Needs a funded wallet and a local proof server.',
   },
 ];
 

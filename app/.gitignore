@@ -3,3 +3,6 @@ dist/
 .vite/
 public/zk/
 *.local
+.env
+.env.*
+!.env.example

@@ -112,12 +112,24 @@ export const App = () => {
     };
   }, [mode]);
 
+  /**
+   * Keep the URL saying where you are: the tab in the hash, the mode in a query parameter.
+   *
+   * The mode was the one piece of state that reset on every refresh, which is a good way to
+   * believe you are on a testnet while running against a local object. `replaceState` rather
+   * than assignment, so Back does not walk the tab bar.
+   */
   useEffect(() => {
     if (isKiosk()) return;
-    if (window.location.hash.replace(/^#/, '') !== tab) {
-      window.history.replaceState(null, '', `#${tab}`);
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', mode);
+    url.hash = tab;
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    const current = window.location.pathname + window.location.search + window.location.hash;
+    if (next !== current) {
+      window.history.replaceState(null, '', next);
     }
-  }, [tab]);
+  }, [tab, mode]);
 
   // Back/forward, and anyone editing the hash by hand.
   useEffect(() => {
@@ -230,6 +242,19 @@ export const App = () => {
             ))}
           </select>
         </label>
+
+        {/*
+          Not a control, a label. With the switch living in Config, nothing else on screen
+          said which mode was running, and "it worked on testnet" is an easy thing to
+          believe while pointed at a local object. Clicking it goes to the switch.
+        */}
+        <button
+          className="mode-badge"
+          onClick={() => setTab('config')}
+          title="Change this in Config"
+        >
+          {MODES.find((entry) => entry.id === mode)?.label ?? mode}
+        </button>
       </div>
 
       <div className="tabs">

@@ -39,7 +39,7 @@ export default defineConfig({
   },
   plugins: [react(), wasm()],
   optimizeDeps: {
-    include: ['@midnight-ntwrk/compact-runtime'],
+    include: ['@midnight-ntwrk/compact-runtime', 'buffer'],
     exclude: [
       '@midnight-ntwrk/onchain-runtime-v3',
       '@midnight-ntwrk/onchain-runtime-v3/midnight_onchain_runtime_wasm_bg.wasm',
