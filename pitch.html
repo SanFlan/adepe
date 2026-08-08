@@ -1,4 +1,4 @@
-<title>Adepe — zero-knowledge eligibility for clinical trials</title>
+<title>Adepe: elegibilidad de conocimiento cero para ensayos clínicos</title>
 <style>
   /*
    * Same system as app/src/app.css: white ground, one saturated accent used as the
@@ -44,7 +44,7 @@
     font-family: var(--sans);
     letter-spacing: -0.02em;
     line-height: 1.5;
-    font-size: clamp(14px, 0.62vw + 0.62vh, 21px);
+    font-size: clamp(16px, 0.75vw + 0.75vh, 24px);
     -webkit-font-smoothing: antialiased;
   }
 
@@ -127,6 +127,8 @@
   .cols--2 { grid-template-columns: 1fr 1fr; }
   .cols--3 { grid-template-columns: repeat(3, 1fr); }
   .cols--5 { grid-template-columns: repeat(5, 1fr); }
+  .cols--5 > * { display: flex; flex-direction: column; }
+  .cols--5 .phase__cost { margin-top: auto; }
 
   .box { border: solid 1px var(--accent); padding: 1.2em 1.3em; }
   .box--fill { background: var(--fill); }
@@ -138,7 +140,7 @@
   .row { display: flex; gap: 1em; align-items: baseline; flex-wrap: wrap; }
 
   .tick { display: flex; gap: 0.7em; }
-  .tick::before { content: "—"; flex: none; }
+  .tick::before { content: "·"; flex: none; }
 
   .stat { font-size: clamp(1.8em, 3.4vw, 3.2em); line-height: 1; font-weight: 700; }
   .stat--sm { font-size: clamp(1.3em, 2vw, 2em); }
@@ -167,7 +169,7 @@
   code, .code { font-family: var(--mono); font-size: 0.86em; letter-spacing: 0; }
 
   .swap { display: grid; grid-template-columns: auto 1fr; gap: 0.6em 1.1em; align-items: baseline; }
-  .swap__k { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-quiet); }
+  .swap__k { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--ink); }
   .swap__v { font-size: clamp(1.1em, 1.9vw, 1.7em); font-weight: 700; color: var(--ink); }
   .swap__v em { font-style: normal; color: var(--accent); }
 
@@ -197,158 +199,152 @@
 <div class="deck">
   <div class="bar bar--top">
     <span class="bar__wordmark">Adepe</span>
-    <span class="bar__section" id="section">Zero-knowledge trial eligibility</span>
+    <span class="bar__section" id="section">Elegibilidad de ensayos con conocimiento cero</span>
   </div>
 
   <main class="stage" id="stage">
 
     <!-- 1 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="Zero-knowledge trial eligibility">
-      <p class="eyebrow">Built on Midnight</p>
-      <h1 class="title">Prove you qualify.<br>Reveal nothing.</h1>
-      <p class="lede">Adepe turns a hospital-signed medical record into a zero-knowledge
-        proof of trial eligibility. The patient finds the study. The sponsor gets a
-        pre-qualified enrollee. Nobody gets the chart.</p>
-      <div class="row">
-        <span class="small">Live contract · 5 oncology trials · patient app + kiosk</span>
-      </div>
+    <section class="slide" data-section="Elegibilidad de ensayos con conocimiento cero">
+      <p class="eyebrow">Construido en Midnight</p>
+      <h1 class="title">Demostrá que calificás.<br>No revelás nada.</h1>
+      <p class="lede">Adepe convierte un historial médico firmado por un hospital en una
+        prueba de conocimiento cero de elegibilidad para ensayos. El paciente encuentra
+        el estudio. El patrocinador obtiene un inscrito pre-calificado. Nadie obtiene
+        el historial.</p>
     </section>
 
     <!-- 2 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="Where the money is">
-      <h2 class="head">A trial burns cash for a decade, then pays for one.</h2>
+    <section class="slide" data-section="Dónde está el dinero">
+      <h2 class="head">Un desarrollo clinico puede durar una década.</h2>
       <div class="cols cols--5">
         <div>
-          <p class="eyebrow">Phase 1</p>
-          <p class="small">Dosage and safety</p>
-          <div class="phase__cost" style="width: 18%"></div>
+          <p class="eyebrow">Fase 1</p>
+          <p class="small">Dosis y seguridad</p>
         </div>
         <div>
-          <p class="eyebrow">Phase 2a</p>
-          <p class="small">Proof of concept</p>
-          <div class="phase__cost" style="width: 34%"></div>
+          <p class="eyebrow">Fase 2a</p>
+          <p class="small">Prueba de concepto</p>
         </div>
         <div>
-          <p class="eyebrow">Phase 2b</p>
-          <p class="small">Definitive dosage<br>100–300 patients</p>
-          <div class="phase__cost" style="width: 56%"></div>
+          <p class="eyebrow">Fase 2b</p>
+          <p class="small">Dosis definitiva<br>100–300 pacientes</p>
         </div>
         <div>
-          <p class="eyebrow">Phase 3</p>
-          <p class="small">Statistical significance<br>300–3,000 patients</p>
-          <div class="phase__cost" style="width: 100%"></div>
+          <p class="eyebrow">Fase 3</p>
+          <p class="small">Significancia estadística<br>300–3.000 pacientes</p>
         </div>
         <div>
-          <p class="eyebrow">Phase 4</p>
-          <p class="small">Pharmacovigilance</p>
-          <div class="phase__cost" style="width: 12%"></div>
+          <p class="eyebrow">Fase 4</p>
+          <p class="small">Farmacovigilancia</p>
         </div>
       </div>
       <div class="cols cols--2">
-        <div><p class="prose"><b>Phases 1–3: you lose money.</b> Recruitment and retention
-          are roughly a third of the bill, and the meter runs whether or not anyone enrolls.</p></div>
-        <div><p class="prose"><b>Phase 4: generational wealth.</b> Every month you reach it
-          late is a month of patent life spent on an unapproved drug.</p></div>
+        <div><p class="prose"><b>Fases 1–3: perdés plata.</b> El reclutamiento y la
+          retención representan aproximadamente un tercio del costo, y el contador corre
+          haya o no inscriptos.</p></div>
+        <div><p class="prose"><b>Fase 4: riqueza generacional.</b> Cada mes que llegás
+          tarde es un mes de vida de patente gastado en un fármaco no aprobado.</p></div>
       </div>
     </section>
 
     <!-- 3 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="The problem">
-      <h2 class="head">Enrollment is broken on both sides of the table.</h2>
+    <section class="slide" data-section="El problema">
+      <h2 class="head">La inscripción está rota en ambos lados de la mesa.</h2>
       <div class="cols cols--2">
         <div class="stack stack--wide">
-          <p class="eyebrow">Sponsor side</p>
+          <p class="eyebrow">Lado del patrocinador</p>
           <p class="stat num">~30%</p>
-          <p class="small">of screened patients fail eligibility — in oncology, closer to 40%.
-            Each one has already had the labs, the imaging and the visit.</p>
+          <p class="small">de los pacientes evaluados no superan la elegibilidad. En
+            oncología, cerca del 40%.</p>
           <ul class="stack">
-            <li class="tick">Phase 2b needs 100–300 patients; Phase 3 needs 300–3,000</li>
-            <li class="tick">Roughly 8 in 10 trials miss their enrollment timeline</li>
-            <li class="tick">Sites get activated that never enroll a single patient</li>
+            <li class="tick">La Fase 2b necesita 100–300 pacientes; la Fase 3, 300–3.000</li>
+            <li class="tick">Aproximadamente 8 de cada 10 ensayos no cumplen su cronograma de inscripción</li>
+            <li class="tick">Se activan sitios que nunca inscriben un solo paciente</li>
           </ul>
         </div>
         <div class="stack stack--wide">
-          <p class="eyebrow">Patient side</p>
+          <p class="eyebrow">Lado del paciente</p>
           <p class="stat num">0</p>
-          <p class="small">ways to search for a trial without handing your diagnosis to a
-            stranger first.</p>
+          <p class="small">formas de buscar un ensayo sin entregarle tu diagnóstico
+            a un desconocido.</p>
           <ul class="stack">
-            <li class="tick">Out-of-pocket cost and time off for a screening that fails</li>
-            <li class="tick">Stress of chasing studies while sick</li>
-            <li class="tick">Oncology history disclosed to every sponsor you approach</li>
+            <li class="tick">Gasto de bolsillo y días de trabajo perdidos por una evaluación que falla</li>
+            <li class="tick">El estrés de perseguir estudios estando enfermo</li>
+            <li class="tick">Historial oncológico divulgado a cada patrocinador al que te acercás</li>
           </ul>
         </div>
       </div>
     </section>
 
     <!-- 4 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="The inversion">
-      <p class="eyebrow">The inversion</p>
+    <section class="slide" data-section="La inversión">
+      <p class="eyebrow">Invertimos el juego</p>
       <div class="swap">
-        <span class="swap__k">Today</span>
-        <span class="swap__v">Hospital <em>→ searches for →</em> patient</span>
+        <span class="swap__k">Hoy</span>
+        <span class="swap__v">Hospital <em>→ busca →</em> paciente</span>
         <span class="swap__k">Adepe</span>
-        <span class="swap__v">Patient <em>→ searches for →</em> study</span>
+        <span class="swap__v">Paciente <em>→ busca →</em> estudio</span>
       </div>
-      <p class="prose">The direction of the search decides who has to disclose. When the
-        sponsor is looking, every candidate opens their chart to be considered. When the
-        patient is looking, they only publish one bit: <em>this person satisfies
-        HORIZON&#8209;1</em>. Same match, none of the exposure, and the funnel starts with
-        people who already know they qualify.</p>
+      <p class="prose">Cuando
+        busca el patrocinador, cada candidato comparte su historial para ser considerado. Cuando
+        busca el paciente, solo se comparte un proof. El mismo resultado sin tener que exponerse. </p>
     </section>
 
     <!-- 5 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="How it works">
-      <h2 class="head">Four steps, one proof.</h2>
+    <section class="slide" data-section="Cómo funciona">
+      <h2 class="head">Cuatro pasos, una prueba.</h2>
       <div class="flow">
         <div class="flow__step stack">
           <span class="flow__n">01</span>
-          <p><b>Hospital signs</b></p>
-          <p class="small">A registered provider Schnorr-signs the medical history — age
-            and five oncology criteria — and hands it to the patient. On-chain, only the
-            provider's public key is registered.</p>
+          <p><b>El hospital firma</b></p>
+          <p class="small">Un proveedor registrado firma con Schnorr el historial médico
+            (edad y cinco criterios oncológicos) y se lo entrega al paciente. En la
+            cadena, solo se registra la clave pública del proveedor.</p>
         </div>
         <div class="flow__step stack">
           <span class="flow__n">02</span>
-          <p><b>Patient holds</b></p>
-          <p class="small">The signed record lives in the patient's wallet as a witness.
-            It is never uploaded, never escrowed, never sent to a sponsor.</p>
+          <p><b>El paciente guarda</b></p>
+          <p class="small">El registro firmado vive en la billetera del paciente como
+            testigo. Nunca se sube, nunca se pone en custodia, nunca se envía a un
+            patrocinador.</p>
         </div>
         <div class="flow__step stack">
           <span class="flow__n">03</span>
-          <p><b>Circuit checks</b></p>
-          <p class="small"><code>Verify(trialID)</code> validates the signature, confirms
-            the signer is a registered provider, and compares the record against the
-            trial's criteria — all inside the proof.</p>
+          <p><b>El circuito verifica</b></p>
+          <p class="small"><code>Verify(trialID)</code> valida la firma, confirma que el
+            firmante es un proveedor registrado y compara el registro con los criterios
+            del ensayo, todo dentro de la prueba.</p>
         </div>
         <div class="flow__step stack">
           <span class="flow__n">04</span>
-          <p><b>Pseudonym enrolls</b></p>
-          <p class="small">A trial-specific key, hashed from the patient's secret and the
-            trial ID, joins that trial's eligible set. The sponsor sees a qualified
-            enrollee and can invite them.</p>
+          <p><b>El seudónimo se inscribe</b></p>
+          <p class="small">Una clave específica del ensayo, derivada del secreto del
+            paciente y el ID del ensayo, se suma al conjunto elegible. El patrocinador
+            ve un inscrito calificado y puede invitarlo.</p>
         </div>
       </div>
-      <p class="note">The enrollment key mixes in the trial ID on purpose: a patient
-        eligible for four studies appears as four unrelated keys, so nobody can join the
-        public sets to rebuild one person's trial history. Re-proving is idempotent.</p>
+      <p class="note">La clave de inscripción mezcla el ID del ensayo a propósito: un
+        paciente elegible para cuatro estudios aparece como cuatro claves sin relación,
+        de modo que nadie puede unir los conjuntos públicos para reconstruir el historial
+        de ensayos de una persona. Volver a probar es idempotente.</p>
     </section>
 
     <!-- 6 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="What leaves the device">
-      <h2 class="head">The disclosure boundary, exactly.</h2>
+    <section class="slide" data-section="Qué sale del dispositivo">
+      <h2 class="head">El límite de divulgación, exactamente.</h2>
       <div class="cols cols--2">
         <div class="stack">
-          <p class="eyebrow">Public on Midnight</p>
+          <p class="eyebrow">Público en Midnight</p>
           <ul class="stack code">
-            <li class="tick">trialID being applied to</li>
-            <li class="tick">the trial's criteria, set at creation</li>
-            <li class="tick">registered provider public keys</li>
-            <li class="tick">one per-trial enrollment pseudonym</li>
+            <li class="tick">trialID al que se aplica</li>
+            <li class="tick">los criterios del ensayo, fijados al crearlo</li>
+            <li class="tick">claves públicas de proveedores registrados</li>
+            <li class="tick">un seudónimo de inscripción por ensayo</li>
           </ul>
         </div>
         <div class="stack">
-          <p class="eyebrow">Never leaves the patient</p>
+          <p class="eyebrow">Nunca sale del paciente</p>
           <ul class="stack code">
             <li class="tick">age</li>
             <li class="tick">nivolumab_counterindication</li>
@@ -356,121 +352,50 @@
             <li class="tick">active_autoimmune_therapy</li>
             <li class="tick">chemotherapy</li>
             <li class="tick">immunotherapy</li>
-            <li class="tick">which hospital signed the record</li>
+            <li class="tick">qué hospital firmó el registro</li>
           </ul>
         </div>
       </div>
-      <p class="note">A failed check writes nothing at all — an ineligible patient is
-        indistinguishable from one who never applied.</p>
+      <p class="note">Una verificación fallida no escribe nada: un paciente inelegible
+        es indistinguible de uno que nunca se postuló.</p>
     </section>
 
     <!-- 7 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="The savings">
-      <h2 class="head">What a 400-patient Phase III stops paying for.</h2>
-      <div class="scroll-x">
-        <table>
-          <thead>
-            <tr><th scope="col">Cost line</th><th scope="col">Today</th><th scope="col">With Adepe</th><th scope="col">Saved</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Screening workups on patients who fail eligibility<br><span class="note">40% → 15% screen-failure rate at $2,000 per workup</span></td>
-              <td>$534,000</td><td>$140,000</td><td>$394,000</td>
-            </tr>
-            <tr>
-              <td>Recruitment and outreach<br><span class="note">$6,533 per enrolled patient, 30% cut from patient-initiated matching</span></td>
-              <td>$2,613,000</td><td>$1,829,000</td><td>$784,000</td>
-            </tr>
-            <tr>
-              <td>Activating sites that enroll nobody<br><span class="note">~11% of sites, $30,000 each to stand up</span></td>
-              <td>$90,000</td><td>$30,000</td><td>$60,000</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr><td>Hard savings, one Phase III</td><td>$3,237,000</td><td>$1,999,000</td><td>$1,238,000</td></tr>
-          </tfoot>
-        </table>
-      </div>
+    <section class="slide" data-section="El costo del reclutamiento">
+      <h2 class="head">El reclutamiento es un tercio del costo de un ensayo.</h2>
       <div class="cols cols--3">
-        <div><p class="stat stat--sm num">$3,100</p><p class="small">saved per enrolled patient</p></div>
-        <div><p class="stat stat--sm num">38%</p><p class="small">off the enrollment cost line</p></div>
-        <div><p class="stat stat--sm num">~4 mo</p><p class="small">earlier to full enrollment — not counted above</p></div>
+        <div class="stack">
+          <p class="stat num">$6.533</p>
+          <p class="small">costo por paciente inscrito en reclutamiento y retención</p>
+        </div>
+        <div class="stack">
+          <p class="stat num">8 de 10</p>
+          <p class="small">ensayos no cumplen su cronograma de inscripción</p>
+        </div>
+        <div class="stack">
+          <p class="stat num">~30%</p>
+          <p class="small">de los pacientes evaluados no superan la elegibilidad; en oncología, cerca del 40%</p>
+        </div>
       </div>
-      <p class="note">Modelled from published industry benchmarks (Tufts CSDD recruitment
-        share and per-patient cost; oncology screen-failure rates), not measured. The time
-        line is deliberately excluded from the total: at the low end of published delay
-        costs — $600,000 per day of lost exclusivity — four months earlier is worth two
-        orders of magnitude more than the operational savings, and no sponsor will take
-        that number from a hackathon deck.</p>
+      <p class="note">Fuente: Tufts CSDD, datos de enrollment publicados.</p>
     </section>
 
     <!-- 8 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="The savings">
-      <h2 class="head">And the patient stops paying too.</h2>
+    <section class="slide" data-section="Lo que sigue">
+      <p class="eyebrow">Para profundizar</p>
+      <h2 class="title">Qué más se puede hacer<br>con Midnight ZK?</h2>
       <div class="cols cols--3">
-        <div class="stack">
-          <p class="stat stat--sm num">197</p>
-          <p class="small">futile screening visits avoided per trial — travel, a day off
-            work, and a biopsy review for a study that was never going to take them.</p>
-        </div>
-        <div class="stack">
-          <p class="stat stat--sm num">1 bit</p>
-          <p class="small">disclosed per application, instead of a full oncology history
-            sent to every sponsor a patient approaches.</p>
-        </div>
-        <div class="stack">
-          <p class="stat stat--sm num">Any hour</p>
-          <p class="small">a patient can check every open study themselves, without asking
-            an oncologist to make calls on their behalf.</p>
-        </div>
+        <div><p class="eyebrow">Criterios más ricos</p><p class="small">Valores de
+          laboratorio, estadificación y líneas previas de tratamiento son campos adicionales
+          en el mismo circuito Compact. La prueba escala sin cambiar el contrato.</p></div>
+        <div><p class="eyebrow">Credenciales reutilizables</p><p class="small">El registro
+          firmado por el hospital puede probarse ante múltiples estudios con pseudónimos
+          independientes. Un paciente nunca vincula sus aplicaciones entre sí.</p></div>
+        <div><p class="eyebrow">Red de confianza</p><p class="small">El registro on-chain
+          puede conectarse a listas nacionales de acreditación: una firma vale legalmente
+          sin revelar qué institución emitió el registro.</p></div>
       </div>
-      <div class="box box--fill">
-        <p class="prose">Compensation is real money to a patient in treatment —
-          <span class="code">HORIZON&#8209;1</span> reimburses travel plus €80 a visit.
-          Today they only find out that offer exists if someone in their hospital happens
-          to know about the study.</p>
-      </div>
-    </section>
-
-    <!-- 9 ------------------------------------------------------------------ -->
-    <section class="slide" data-section="Built at the hackathon">
-      <h2 class="head">Not a mock. It runs.</h2>
-      <div class="cols cols--2">
-        <div class="stack">
-          <p class="eyebrow">Contract, in Compact</p>
-          <ul class="stack small">
-            <li class="tick"><code>registerProvider</code> / <code>removeProvider</code> — admin-gated hospital registry</li>
-            <li class="tick"><code>createTrial</code> — criteria fixed on chain at creation</li>
-            <li class="tick"><code>Verify</code> — signature check, provider check, eligibility check, pseudonymous enrollment</li>
-            <li class="tick"><code>enrollmentKey</code> — a patient can look themselves up without re-proving</li>
-            <li class="tick">In-circuit Schnorr over Jubjub, 6-field message</li>
-          </ul>
-        </div>
-        <div class="stack">
-          <p class="eyebrow">Apps</p>
-          <ul class="stack small">
-            <li class="tick">Patient app: browse 5 oncology trials, prove, enroll</li>
-            <li class="tick">Hospital kiosk: issue and sign a medical record</li>
-            <li class="tick">Local proof generation — the record never crosses the network</li>
-            <li class="tick">Catalogue seeded with real trial shapes: Phase I/II through Phase III, 60 to 400 patients, 5 to 24 sites</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- 10 ----------------------------------------------------------------- -->
-    <section class="slide" data-section="Next">
-      <p class="eyebrow">What we need next</p>
-      <h2 class="title">One hospital,<br>one sponsor,<br>one real study.</h2>
-      <div class="cols cols--3">
-        <div><p class="eyebrow">Criteria</p><p class="small">Six fields today. Lab values,
-          staging and prior-line counts are the same circuit with a wider struct.</p></div>
-        <div><p class="eyebrow">Trust</p><p class="small">Provider registry becomes the
-          national accreditation list, so a signature means something legally.</p></div>
-        <div><p class="eyebrow">Proof</p><p class="small">Run one arm of a live Phase II
-          alongside conventional screening and measure the failure rate we actually cut.</p></div>
-      </div>
-      <p class="lede">Adepe — the patient searches, and keeps the chart.</p>
+      <p class="lede">Adepe: el paciente busca, y se queda con el historial.</p>
     </section>
 
   </main>
@@ -478,7 +403,7 @@
   <div class="bar bar--bottom">
     <div class="dots" id="dots"></div>
     <span class="counter" id="counter">01 / 10</span>
-    <button class="theme" id="theme" type="button">Theme</button>
+    <!-- <button class="theme" id="theme" type="button">Theme</button> -->
   </div>
 </div>
 
