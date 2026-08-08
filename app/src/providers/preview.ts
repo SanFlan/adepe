@@ -63,6 +63,25 @@ const toHex = (bytes: Uint8Array) =>
 const fromHex = (hex: string): Uint8Array =>
   new Uint8Array((hex.match(/../g) ?? []).map((byte) => Number.parseInt(byte, 16)));
 
+/**
+ * Say something useful about a wallet failure.
+ *
+ * Connector errors are `Error & { type, code, reason }` and frequently carry an empty
+ * `message`, so the default rendering is the bare word "Error" — which is what you get
+ * after typing your password and watching it fail. The code and reason are the parts worth
+ * reading, and the raw object goes to the console for anything this does not cover.
+ */
+const describeWalletError = (error: unknown, step: string): Error => {
+  console.error(`[adepe] wallet failed during ${step}`, error);
+
+  const detail = error as Partial<{ code: string; reason: string; message: string }>;
+  const parts = [detail?.code, detail?.reason ?? detail?.message].filter(
+    (part): part is string => typeof part === 'string' && part.length > 0,
+  );
+  const described = parts.length > 0 ? parts.join(': ') : String(error);
+  return new Error(`${step} failed — ${described}`);
+};
+
 /** The first injected wallet whose connector major version we understand. */
 const findWallet = (): InitialAPI | undefined =>
   Object.values(window.midnight ?? {}).find(
@@ -130,19 +149,36 @@ export class PreviewProvider implements TrialsProvider {
           getEncryptionPublicKey: () => addresses.shieldedEncryptionPublicKey,
           // The wallet adds inputs and pays fees; it never sees the private state.
           balanceTx: async (tx: UnboundTransaction): Promise<FinalizedTransaction> => {
-            const balanced = await connected.balanceUnsealedTransaction(toHex(tx.serialize()));
-            return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
-              'signature',
-              'proof',
-              'binding',
-              fromHex(balanced.tx),
-            );
+            try {
+              const balanced = await connected.balanceUnsealedTransaction(
+                toHex(tx.serialize()),
+              );
+              return Transaction.deserialize<SignatureEnabled, Proof, Binding>(
+                'signature',
+                'proof',
+                'binding',
+                fromHex(balanced.tx),
+              );
+            } catch (error) {
+              throw describeWalletError(error, 'Balancing');
+            }
           },
         },
         midnightProvider: {
           submitTx: async (tx: FinalizedTransaction): Promise<string> => {
-            await connected.submitTransaction(toHex(tx.serialize()));
-            return tx.identifiers()[0]!;
+            try {
+              await connected.submitTransaction(toHex(tx.serialize()));
+            } catch (error) {
+              throw describeWalletError(error, 'Submitting');
+            }
+            // Reading the id must not turn a submitted transaction into a failed one: by
+            // this point the wallet has already accepted it.
+            try {
+              return tx.identifiers()[0] ?? '';
+            } catch (error) {
+              console.warn('[adepe] submitted, but could not read the transaction id', error);
+              return '';
+            }
           },
         },
       };
@@ -220,7 +256,12 @@ export class PreviewProvider implements TrialsProvider {
       );
       await this.refresh();
     } catch (error) {
-      return { outcome: 'error', message: (error as Error).message };
+      console.error('[adepe] enroll failed', error);
+      const message = (error as Error)?.message;
+      return {
+        outcome: 'error',
+        message: message !== undefined && message !== '' ? message : String(error),
+      };
     }
 
     // `Verify` returns silently when the issuer is untrusted or the patient does not

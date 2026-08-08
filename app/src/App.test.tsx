@@ -410,6 +410,57 @@ describe('App', () => {
     });
   });
 
+  describe('url state', () => {
+    const here = () => window.location.search + window.location.hash;
+
+    it('records the tab and the mode in the url', async () => {
+      await render();
+      expect(here()).toContain('mode=mocked');
+      expect(here()).toContain('#overview');
+
+      await clickText('Trials');
+      expect(here()).toContain('#trials');
+      expect(here()).toContain('mode=mocked');
+    });
+
+    it('restores the mode from the url, so a refresh does not silently drop to mocked', async () => {
+      window.history.replaceState(null, '', '/?mode=simulated#trials');
+      await render();
+
+      expect(container.querySelector('.mode-badge')?.textContent).toBe('Simulated');
+      expect(here()).toContain('mode=simulated');
+    });
+
+    it('always says which mode is running', async () => {
+      await render();
+      expect(container.querySelector('.mode-badge')?.textContent).toBe('Mocked');
+
+      // The badge is on every tab, not only where the switch lives.
+      await clickText('Patient App');
+      expect(container.querySelector('.mode-badge')?.textContent).toBe('Mocked');
+
+      await clickText('Config');
+      const preview = [...container.querySelectorAll('.modes .mode')].find((button) =>
+        button.textContent?.includes('Preview testnet'),
+      ) as HTMLButtonElement;
+      await act(async () => preview.click());
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(container.querySelector('.mode-badge')?.textContent).toBe('Preview testnet');
+      expect(here()).toContain('mode=preview');
+    });
+
+    it('the badge opens the mode switch', async () => {
+      await render();
+      await act(async () => {
+        (container.querySelector('.mode-badge') as HTMLButtonElement).click();
+      });
+      expect(container.textContent).toContain('How much of the real system is running');
+    });
+  });
+
   it('offers a standalone popup for the patient app', async () => {
     await render();
     await clickText('Patient App');

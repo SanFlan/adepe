@@ -289,6 +289,14 @@ main {
   font-weight: 700;
 }
 
+/* The mode indicator. Reads as a status, not a control, which is what it mostly is. */
+.topbar > button.mode-badge {
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+}
+
 .topbar > button:hover:not(:disabled) {
   background: var(--accent);
   color: var(--bg);
