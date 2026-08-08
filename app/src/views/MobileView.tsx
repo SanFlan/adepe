@@ -16,12 +16,36 @@ import type { EnrollResult, TrialsProvider, TrialState } from '../providers/type
 import type { Profile } from '../lib/profiles.js';
 import { credentialStatus, isUsable, STATUS_LABEL } from '../lib/credential-status.js';
 import { evaluateEligibility, isEligible, type Trial } from '../lib/trials.js';
+import type { EnrollOutcome } from '../providers/types.js';
+import { openPhoneWindow } from '../lib/kiosk.js';
+
+/**
+ * What a patient is told, as opposed to what the provider reports.
+ *
+ * Provider messages are written for whoever is running the simulator -- they mention
+ * proof timings, issuer registration, ledger state. None of that belongs on a phone, so
+ * outcomes are translated here and the technical wording stays on the desktop Trials tab.
+ */
+const PATIENT_MESSAGE: Record<EnrollOutcome, string> = {
+  enrolled:
+    'Success — your proof has been submitted. We’ll contact you promptly to continue with the trial process.',
+  'already-enrolled': 'You already hold a place in this trial. We’ll be in touch.',
+  ineligible:
+    'This study isn’t a match for your record. Nothing about you was shared.',
+  'untrusted-issuer':
+    'This study doesn’t recognise the clinic that signed your record. Ask your clinic to issue it again.',
+  'no-credential':
+    'Your record hasn’t been signed by your clinic yet, so there’s nothing to prove.',
+  error: 'Something went wrong submitting your application. Please try again.',
+};
 
 interface Props {
   provider: TrialsProvider;
   profile: Profile;
   revision: number;
   onLedgerChange: () => void;
+  /** Rendered alone in a chromeless popup: drop the frame and the explanatory aside. */
+  kiosk?: boolean;
 }
 
 type Screen = 'home' | 'trials' | 'applications';
@@ -31,12 +55,20 @@ const firstName = (displayName: string) => displayName.split(' ')[0] ?? displayN
 /** A fixed time, so screenshots and recordings stay reproducible. */
 const STATUS_TIME = '9:41';
 
-export const MobileView = ({ provider, profile, revision, onLedgerChange }: Props) => {
+export const MobileView = ({
+  provider,
+  profile,
+  revision,
+  onLedgerChange,
+  kiosk = false,
+}: Props) => {
   const [screen, setScreen] = useState<Screen>('home');
   const [openTrial, setOpenTrial] = useState<bigint | null>(null);
   const [trials, setTrials] = useState<readonly TrialState[]>([]);
   const [stage, setStage] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, EnrollResult>>({});
+  // A full-screen confirmation is worth interrupting for; the other outcomes are not.
+  const [celebrating, setCelebrating] = useState<Trial | null>(null);
 
   useEffect(() => {
     setTrials(provider.listTrials());
@@ -54,6 +86,10 @@ export const MobileView = ({ provider, profile, revision, onLedgerChange }: Prop
     setStage(null);
     setResults((previous) => ({ ...previous, [String(trialId)]: result }));
     onLedgerChange();
+    if (result.outcome === 'enrolled') {
+      const trial = trials.find((entry) => entry.trial.id === trialId)?.trial;
+      if (trial !== undefined) setCelebrating(trial);
+    }
   };
 
   // `trials` is empty on the first render, so an open trial can briefly resolve to nothing.
@@ -64,8 +100,8 @@ export const MobileView = ({ provider, profile, revision, onLedgerChange }: Prop
   const enrolled = trials.filter(({ trial }) => provider.isEnrolled(profile, trial.id));
 
   return (
-    <div className="phone-stage">
-      <div className="phone">
+    <div className={kiosk ? 'phone-stage is-kiosk' : 'phone-stage'}>
+      <div className={kiosk ? 'phone is-kiosk' : 'phone'}>
         <div className="phone-status">
           <span>{STATUS_TIME}</span>
           <span className="phone-notch" />
@@ -100,6 +136,17 @@ export const MobileView = ({ provider, profile, revision, onLedgerChange }: Prop
           )}
         </div>
 
+        {celebrating !== null ? (
+          <SubmittedSheet
+            trial={celebrating}
+            onDone={() => {
+              setCelebrating(null);
+              setOpenTrial(null);
+              setScreen('applications');
+            }}
+          />
+        ) : null}
+
         <nav className="phone-tabs">
           {(
             [
@@ -126,7 +173,16 @@ export const MobileView = ({ provider, profile, revision, onLedgerChange }: Prop
         </nav>
       </div>
 
+      {kiosk ? null : (
       <aside className="phone-aside">
+        <button className="primary" onClick={() => openPhoneWindow(provider.mode)}>
+          Open as a standalone app ↗
+        </button>
+        <p className="note" style={{ marginTop: 10 }}>
+          Opens a chromeless window with no address bar, sized to the screen. It follows
+          the patient you pick here. In <strong>Mocked</strong> mode it also shares the
+          ledger; the other modes keep theirs in memory, so the popup runs its own.
+        </p>
         <h3>What the phone is really doing</h3>
         <p className="note">
           This is not a mockup. Tapping Apply runs the same provider as the desktop Trials
@@ -142,6 +198,7 @@ export const MobileView = ({ provider, profile, revision, onLedgerChange }: Prop
           simulator, not to the patient.
         </p>
       </aside>
+      )}
     </div>
   );
 };
@@ -294,10 +351,8 @@ const TrialDetail = ({
         Checked on your phone. None of this was sent anywhere.
       </p>
 
-      {result !== undefined ? (
-        <div className={`phone-result ${result.outcome === 'enrolled' ? 'good' : 'bad'}`}>
-          {result.message}
-        </div>
+      {result !== undefined && result.outcome !== 'enrolled' ? (
+        <div className="phone-result bad">{PATIENT_MESSAGE[result.outcome]}</div>
       ) : null}
 
       <button
@@ -318,6 +373,42 @@ const TrialDetail = ({
     </>
   );
 };
+
+/**
+ * The confirmation.
+ *
+ * Deliberately the only interruption in the app. A patient has just handed over a
+ * zero-knowledge proof of their medical eligibility; "Accepted, proof generated in 893ms"
+ * is the wrong register entirely.
+ */
+const SubmittedSheet = ({ trial, onDone }: { trial: Trial; onDone: () => void }) => (
+  <div className="phone-sheet" role="dialog" aria-label="Application submitted">
+    <div className="tick">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle className="tick-ring" cx="32" cy="32" r="28" />
+        <path className="tick-mark" d="M20 33.5 L28.5 42 L45 25" />
+      </svg>
+    </div>
+
+    <h2>You’re all set</h2>
+    <p className="phone-sheet-copy">{PATIENT_MESSAGE.enrolled}</p>
+
+    <div className="phone-sheet-trial">
+      <span className="phone-code">{trial.code}</span>
+      <strong>{trial.title}</strong>
+      <span className="phone-meta">{trial.sponsor}</span>
+    </div>
+
+    <p className="phone-sheet-fine">
+      Your medical record stayed on this phone. The study received a proof that you
+      qualify — not your history.
+    </p>
+
+    <button className="phone-cta" onClick={onDone}>
+      Done
+    </button>
+  </div>
+);
 
 const Applications = ({ entries }: { entries: readonly TrialState[] }) => (
   <>

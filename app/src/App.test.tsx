@@ -97,7 +97,7 @@ describe('App', () => {
     await render();
 
     await clickText('Record editor');
-    await clickText('Sign as Northgate Oncology');
+    await clickText('Save & sign as Northgate Oncology');
 
     await clickText('Trials');
     expect(container.textContent).not.toContain('has not been signed yet');
@@ -212,11 +212,17 @@ describe('App', () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
       });
 
-      expect(container.textContent).toContain('Accepted');
+      // A confirmation a patient can read, with no proof timings in it.
+      const sheet = container.querySelector('.phone-sheet')!;
+      expect(sheet).not.toBeNull();
+      expect(sheet.textContent).toContain('You’re all set');
+      expect(sheet.textContent).toContain('We’ll contact you promptly');
+      expect(sheet.textContent).not.toMatch(/\d+ms/);
+      expect(sheet.querySelector('.tick-mark')).not.toBeNull();
 
-      await act(async () => phoneTab('Mine')!.dispatchEvent(
-        new MouseEvent('click', { bubbles: true }),
-      ));
+      // Done dismisses it and lands on the applications tab.
+      await act(async () => (sheet.querySelector('.phone-cta') as HTMLButtonElement).click());
+      expect(container.querySelector('.phone-sheet')).toBeNull();
       expect(container.textContent).toContain('You hold a place in 1 trial');
       expect(container.textContent).toContain('HORIZON-1');
     });
@@ -240,6 +246,127 @@ describe('App', () => {
       expect(cta.disabled).toBe(true);
       expect(cta.textContent).toContain('do not match');
     });
+  });
+
+  describe('record editor', () => {
+    const editor = () => container.querySelector('textarea') as HTMLTextAreaElement;
+
+    // Both the editor and the Clinic view explain what a stale attestation is, so the
+    // phrase is always present as prose. Only the roster's status pills are evidence.
+    const rosterStatuses = () =>
+      [...container.querySelectorAll('.roster .pill')].map((pill) => pill.textContent);
+
+    const type = async (text: string) => {
+      const area = editor();
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        'value',
+      )!.set!;
+      setter.call(area, text);
+      await act(async () => {
+        area.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+
+    it('saves an edit without signing it, leaving the attestation stale', async () => {
+      await render();
+      await clickText('Clinic');
+      await clickText('Sign all (2)');
+
+      await clickText('Record editor');
+      const edited = editor().value.replace('"chemotherapy": false', '"chemotherapy": true');
+      expect(edited).not.toBe(editor().value);
+      await type(edited);
+      expect(container.textContent).toContain('unsaved changes');
+
+      await clickText('Save record');
+      expect(container.textContent).not.toContain('unsaved changes');
+
+      // Saving must not re-sign: the attestation now covers a record that changed.
+      await clickText('Clinic');
+      expect(rosterStatuses()).toContain('record changed since signing');
+    });
+
+    it('propagates a renamed patient to the switcher and the phone', async () => {
+      await render();
+      await clickText('Record editor');
+      await type(editor().value.replace('"displayName": "Marta Ilves"', '"displayName": "Marta Ilves-Rand"'));
+      await clickText('Save record');
+
+      // Header switcher.
+      const options = [...container.querySelectorAll('option')].map((o) => o.textContent);
+      expect(options.some((text) => text?.includes('Marta Ilves-Rand'))).toBe(true);
+
+      // The phone greets by first name and the passport shows the full one.
+      await clickText('Patient app');
+      expect(container.textContent).toContain('Hello, Marta');
+      expect(container.querySelector('.passport')?.textContent).toContain('Marta Ilves-Rand');
+
+      // Clinic roster too.
+      await clickText('Clinic');
+      expect(container.querySelector('.roster')?.textContent).toContain('Marta Ilves-Rand');
+    });
+
+    it('keeps the existing name when the record blanks it', async () => {
+      await render();
+      await clickText('Record editor');
+      await type(editor().value.replace('"displayName": "Marta Ilves"', '"displayName": ""'));
+      await clickText('Save record');
+
+      const options = [...container.querySelectorAll('option')].map((o) => o.textContent);
+      expect(options.some((text) => text?.includes('Marta Ilves'))).toBe(true);
+    });
+
+    it('reverts an edit', async () => {
+      await render();
+      await clickText('Record editor');
+      const original = editor().value;
+      await type(original.replace('"age": 54', '"age": 61'));
+      expect(container.textContent).toContain('unsaved changes');
+
+      await clickText('Revert');
+      expect(editor().value).toBe(original);
+      expect(container.textContent).not.toContain('unsaved changes');
+    });
+
+    it('signing saves and attests in one step', async () => {
+      await render();
+      await clickText('Record editor');
+      await type(editor().value.replace('"age": 54', '"age": 61'));
+
+      await clickText('Save & sign as Northgate Oncology');
+      expect(container.textContent).not.toContain('unsaved changes');
+      expect(editor().value).toContain('"age": 61');
+
+      await clickText('Clinic');
+      expect(rosterStatuses()).not.toContain('record changed since signing');
+      expect(rosterStatuses()).toContain('signed');
+    });
+  });
+
+  it('offers a standalone popup for the patient app', async () => {
+    await render();
+    await clickText('Patient app');
+
+    const opened: Array<[string, string, string]> = [];
+    const original = window.open;
+    // jsdom does not implement window.open, so record the call instead.
+    (window as unknown as { open: unknown }).open = (...args: [string, string, string]) => {
+      opened.push(args);
+      return null;
+    };
+    try {
+      await clickText('Open as a standalone app ↗');
+    } finally {
+      window.open = original;
+    }
+
+    expect(opened).toHaveLength(1);
+    const [url, name, features] = opened[0]!;
+    expect(url).toContain('kiosk=1');
+    expect(url).toContain('mode=mocked');
+    expect(name).toBe('adepe-phone');
+    expect(features).toContain('popup=yes');
   });
 
   it('reports testnet as unavailable rather than crashing', async () => {

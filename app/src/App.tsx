@@ -4,6 +4,7 @@ import { SimulatedProvider } from './providers/simulated.js';
 import { LocalProofsProvider } from './providers/localProofs.js';
 import { PreviewProvider } from './providers/preview.js';
 import { BrowserZkConfigProvider } from './lib/zk-config.js';
+import { initialMode, isKiosk } from './lib/kiosk.js';
 import { MODES, type Mode, type TrialsProvider } from './providers/types.js';
 import {
   ARCHETYPES,
@@ -48,7 +49,7 @@ const makeProvider = (mode: Mode): TrialsProvider => {
 };
 
 export const App = () => {
-  const [mode, setMode] = useState<Mode>('mocked');
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [tab, setTab] = useState<Tab>('trials');
   const [provider, setProvider] = useState<TrialsProvider | null>(null);
   const [profiles, setProfiles] = useState<readonly Profile[]>([]);
@@ -57,9 +58,16 @@ export const App = () => {
   const [revision, setRevision] = useState(0);
 
   useEffect(() => {
-    const stored = loadProfiles();
-    setProfiles(stored.profiles);
-    setSelectedId(stored.selectedId ?? stored.profiles[0]?.id ?? null);
+    const read = () => {
+      const stored = loadProfiles();
+      setProfiles(stored.profiles);
+      setSelectedId(stored.selectedId ?? stored.profiles[0]?.id ?? null);
+    };
+    read();
+    // Fires in *other* windows on the same origin, which is what lets the kiosk popup
+    // follow the patient switcher in the window that opened it.
+    window.addEventListener('storage', read);
+    return () => window.removeEventListener('storage', read);
   }, []);
 
   useEffect(() => {
@@ -136,6 +144,24 @@ export const App = () => {
   }, [provider]);
 
   const status = provider?.status();
+
+  if (isKiosk()) {
+    return (
+      <div className="kiosk">
+        {provider === null || selected === null ? (
+          <p className="note">Starting…</p>
+        ) : (
+          <MobileView
+            provider={provider}
+            profile={selected}
+            revision={revision}
+            onLedgerChange={() => setRevision((value) => value + 1)}
+            kiosk
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <>

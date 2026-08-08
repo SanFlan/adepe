@@ -17,8 +17,15 @@ import {
   rogueSecret,
   signHistory,
 } from '../lib/issuer.js';
-import { SIGNED_FIELDS, formatHealthRecord, historyToMessage, parseHealthRecord } from '../lib/record.js';
+import {
+  SIGNED_FIELDS,
+  formatHealthRecord,
+  historyToMessage,
+  parseHealthRecord,
+  type HealthRecord,
+} from '../lib/record.js';
 import { toStoredCredential, type Profile } from '../lib/profiles.js';
+import { STATUS_LABEL, STATUS_TONE, credentialStatus } from '../lib/credential-status.js';
 
 interface Props {
   profile: Profile;
@@ -26,7 +33,8 @@ interface Props {
 }
 
 export const IssuerView = ({ profile, onIssued }: Props) => {
-  const [draft, setDraft] = useState(() => formatHealthRecord(profile.record));
+  const saved = formatHealthRecord(profile.record);
+  const [draft, setDraft] = useState(saved);
   const [errors, setErrors] = useState<ReadonlyArray<{ path: string; message: string }>>([]);
   const [loadedFor, setLoadedFor] = useState(profile.id);
 
@@ -38,6 +46,38 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
   }
 
   const parsed = parseHealthRecord(draft);
+  const dirty = draft !== saved;
+  const status = credentialStatus(profile);
+
+  /**
+   * Adopt an edited record, keeping the profile's display name in step with it.
+   *
+   * The document is the source of truth for who this is, so renaming the patient here has
+   * to reach the header's switcher, the clinic roster and the phone's greeting. An empty
+   * name would blank all three, so it falls back to the existing one.
+   */
+  const withRecord = (record: HealthRecord): Profile => ({
+    ...profile,
+    displayName: record.patient.displayName.trim() || profile.displayName,
+    record,
+  });
+
+  /**
+   * Persist the edit without touching the credential.
+   *
+   * Saving and attesting are different acts: a clerk corrects a record, an issuer vouches
+   * for it. Keeping them apart is what lets a saved edit leave an existing attestation
+   * behind -- it goes stale, and the Clinic view says so.
+   */
+  const save = (): boolean => {
+    if (!parsed.ok) {
+      setErrors(parsed.errors);
+      return false;
+    }
+    setErrors([]);
+    onIssued(withRecord(parsed.record));
+    return true;
+  };
 
   const sign = (rogue: boolean) => {
     if (!parsed.ok) {
@@ -48,9 +88,9 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
     const { record } = parsed;
     const secret = rogue ? rogueSecret : issuerSecret;
     const publicKey = rogue ? roguePublicKey : issuerPublicKey;
+    // Signing implies saving: the attestation must cover what is on file.
     onIssued({
-      ...profile,
-      record,
+      ...withRecord(record),
       credential: toStoredCredential(
         record.history,
         signHistory(record.history, secret),
@@ -76,7 +116,13 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
       </div>
 
       <div className="card">
-        <h2>Record for {profile.displayName}</h2>
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>Record for {profile.displayName}</h2>
+          <div className="row" style={{ gap: 8 }}>
+            {dirty ? <span className="pill warn">unsaved changes</span> : null}
+            <span className={`pill ${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>
+          </div>
+        </div>
         <p className="note">
           Only the six <span className="pill signed-badge">signed</span> fields below are
           covered by the signature and read by the contract. Everything else in this
@@ -99,17 +145,32 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
         ) : null}
 
         <div className="row" style={{ marginTop: 12 }}>
-          <button className="primary" onClick={() => sign(false)} disabled={!parsed.ok}>
-            Sign as {ISSUER_NAME}
+          <button
+            className={dirty ? 'primary' : undefined}
+            onClick={save}
+            disabled={!dirty || !parsed.ok}
+          >
+            Save record
+          </button>
+          <button onClick={() => setDraft(saved)} disabled={!dirty}>
+            Revert
+          </button>
+          <span className="muted">|</span>
+          <button className={dirty ? undefined : 'primary'} onClick={() => sign(false)} disabled={!parsed.ok}>
+            Save &amp; sign as {ISSUER_NAME}
           </button>
           <button onClick={() => sign(true)} disabled={!parsed.ok}>
-            Sign as {ROGUE_NAME}
+            Save &amp; sign as {ROGUE_NAME}
           </button>
-          <span className="note" style={{ margin: 0 }}>
-            The second issuer is not registered — useful for showing what the contract does
-            with a perfectly valid signature it has no reason to trust.
-          </span>
         </div>
+        <p className="note" style={{ marginTop: 10, marginBottom: 0 }}>
+          Saving alone leaves any existing attestation behind: it then covers a record that
+          no longer matches, and shows up as <em>record changed since signing</em>. That is
+          the point — a signature is over six specific values, not over “this patient”.
+          {' '}
+          {ROGUE_NAME} is not in the contract’s providers set, so its signatures verify and
+          are still refused.
+        </p>
       </div>
 
       {parsed.ok ? (
