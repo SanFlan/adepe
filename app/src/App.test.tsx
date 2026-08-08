@@ -41,6 +41,8 @@ const clickText = async (text: string) => {
 
 beforeEach(() => {
   localStorage.clear();
+  // The open tab now lives in the hash, which jsdom keeps between tests.
+  window.history.replaceState(null, '', '/');
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -52,9 +54,10 @@ afterEach(() => {
 });
 
 describe('App', () => {
-  it('renders the trial catalogue on first load', async () => {
+  it('opens on the overview', async () => {
     await render();
     expect(container.textContent).toContain('ADEPE');
+    expect(container.textContent).toContain('What the world can see');
     expect(container.textContent).toContain('HORIZON-1');
     expect(container.textContent).toContain('VANGUARD-5');
   });
@@ -67,6 +70,7 @@ describe('App', () => {
 
   it('warns that a fresh profile holds no credential', async () => {
     await render();
+    await clickText('Trials');
     expect(container.textContent).toContain('has not been signed yet');
   });
 
@@ -75,9 +79,9 @@ describe('App', () => {
     for (const tab of [
       'Credential',
       'Clinic',
-      'Record editor',
+      'Record Editor',
       'Overview',
-      'Patient app',
+      'Patient App',
       'Trials',
     ]) {
       await clickText(tab);
@@ -87,7 +91,7 @@ describe('App', () => {
 
   it('shows the issuer key and the six signed fields', async () => {
     await render();
-    await clickText('Record editor');
+    await clickText('Record Editor');
     expect(container.textContent).toContain('Northgate Oncology');
     expect(container.textContent).toContain('The six signed fields');
   });
@@ -96,7 +100,7 @@ describe('App', () => {
   it('signs a record and enrolls the patient in a trial she qualifies for', async () => {
     await render();
 
-    await clickText('Record editor');
+    await clickText('Record Editor');
     await clickText('Save & sign as Northgate Oncology');
 
     await clickText('Trials');
@@ -176,7 +180,7 @@ describe('App', () => {
 
     it('tells an unsigned patient to see their clinic', async () => {
       await render();
-      await clickText('Patient app');
+      await clickText('Patient App');
 
       expect(container.querySelector('.phone')).not.toBeNull();
       expect(container.textContent).toContain('Not yet signed by your clinic');
@@ -190,7 +194,7 @@ describe('App', () => {
       await clickText('Clinic');
       await clickText('Sign all (2)');
 
-      await clickText('Patient app');
+      await clickText('Patient App');
       expect(container.querySelector('.passport.is-valid')).not.toBeNull();
 
       await act(async () => phoneTab('Trials')!.dispatchEvent(
@@ -231,7 +235,7 @@ describe('App', () => {
       await render();
       await clickText('Clinic');
       await clickText('Sign all (2)');
-      await clickText('Patient app');
+      await clickText('Patient App');
 
       await act(async () => phoneTab('Trials')!.dispatchEvent(
         new MouseEvent('click', { bubbles: true }),
@@ -273,7 +277,7 @@ describe('App', () => {
       await clickText('Clinic');
       await clickText('Sign all (2)');
 
-      await clickText('Record editor');
+      await clickText('Record Editor');
       const edited = editor().value.replace('"chemotherapy": false', '"chemotherapy": true');
       expect(edited).not.toBe(editor().value);
       await type(edited);
@@ -289,7 +293,7 @@ describe('App', () => {
 
     it('propagates a renamed patient to the switcher and the phone', async () => {
       await render();
-      await clickText('Record editor');
+      await clickText('Record Editor');
       await type(editor().value.replace('"displayName": "Marta Ilves"', '"displayName": "Marta Ilves-Rand"'));
       await clickText('Save record');
 
@@ -298,7 +302,7 @@ describe('App', () => {
       expect(options.some((text) => text?.includes('Marta Ilves-Rand'))).toBe(true);
 
       // The phone greets by first name and the passport shows the full one.
-      await clickText('Patient app');
+      await clickText('Patient App');
       expect(container.textContent).toContain('Hello, Marta');
       expect(container.querySelector('.passport')?.textContent).toContain('Marta Ilves-Rand');
 
@@ -309,7 +313,7 @@ describe('App', () => {
 
     it('keeps the existing name when the record blanks it', async () => {
       await render();
-      await clickText('Record editor');
+      await clickText('Record Editor');
       await type(editor().value.replace('"displayName": "Marta Ilves"', '"displayName": ""'));
       await clickText('Save record');
 
@@ -319,7 +323,7 @@ describe('App', () => {
 
     it('reverts an edit', async () => {
       await render();
-      await clickText('Record editor');
+      await clickText('Record Editor');
       const original = editor().value;
       await type(original.replace('"age": 54', '"age": 61'));
       expect(container.textContent).toContain('unsaved changes');
@@ -331,7 +335,7 @@ describe('App', () => {
 
     it('signing saves and attests in one step', async () => {
       await render();
-      await clickText('Record editor');
+      await clickText('Record Editor');
       await type(editor().value.replace('"age": 54', '"age": 61'));
 
       await clickText('Save & sign as Northgate Oncology');
@@ -346,7 +350,7 @@ describe('App', () => {
 
   it('offers a standalone popup for the patient app', async () => {
     await render();
-    await clickText('Patient app');
+    await clickText('Patient App');
 
     const opened: Array<[string, string, string]> = [];
     const original = window.open;
@@ -371,7 +375,7 @@ describe('App', () => {
 
   it('reports testnet as unavailable rather than crashing', async () => {
     await render();
-    const select = container.querySelector('select')!;
+    const select = container.querySelector('select[aria-label="mode"]') as HTMLSelectElement;
     await act(async () => {
       select.value = 'preview';
       select.dispatchEvent(new Event('change', { bubbles: true }));

@@ -12,9 +12,10 @@ import type { LedgerPanel, TrialsProvider } from '../providers/types.js';
 interface Props {
   provider: TrialsProvider;
   revision: number;
+  onReset: () => void;
 }
 
-export const LedgerDrawer = ({ provider, revision }: Props) => {
+export const LedgerDrawer = ({ provider, revision, onReset }: Props) => {
   const [open, setOpen] = useState(false);
   const [panels, setPanels] = useState<readonly LedgerPanel[]>([]);
 
@@ -29,6 +30,16 @@ export const LedgerDrawer = ({ provider, revision }: Props) => {
         <span className="muted" style={{ fontSize: 13 }}>
           {provider.mode} · {provider.status().detail}
         </span>
+        <span className="spacer" />
+        <button
+          onClick={(event) => {
+            // The whole header toggles the drawer; resetting should not also open it.
+            event.stopPropagation();
+            onReset();
+          }}
+        >
+          reset demo
+        </button>
       </header>
       {open ? (
         <div className="body">

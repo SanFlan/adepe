@@ -23,7 +23,30 @@ import { CredentialView } from './views/CredentialView.js';
 import { OverviewView } from './views/OverviewView.js';
 import { LedgerDrawer } from './views/LedgerDrawer.js';
 
-type Tab = 'phone' | 'trials' | 'credential' | 'clinic' | 'issuer' | 'overview';
+type Tab = 'overview' | 'phone' | 'trials' | 'credential' | 'clinic' | 'issuer';
+
+const TABS: ReadonlyArray<[Tab, string]> = [
+  ['overview', 'Overview'],
+  ['phone', 'Patient App'],
+  ['trials', 'Trials'],
+  ['credential', 'Credential'],
+  ['clinic', 'Clinic'],
+  // Named for what it does rather than who does it: "Issuer" alongside "Clinic" reads as
+  // two names for the same thing.
+  ['issuer', 'Record Editor'],
+];
+
+const DEFAULT_TAB: Tab = 'overview';
+
+/**
+ * The open tab lives in the URL hash, so a refresh — or a shared link — lands where you
+ * left off. `replaceState` rather than assigning `location.hash`, which would push a
+ * history entry per click and make Back walk the tab bar.
+ */
+const tabFromHash = (): Tab => {
+  const requested = window.location.hash.replace(/^#/, '');
+  return TABS.some(([id]) => id === requested) ? (requested as Tab) : DEFAULT_TAB;
+};
 
 /**
  * Where the browser fetches proving keys, and where it sends them to be proved.
@@ -50,7 +73,7 @@ const makeProvider = (mode: Mode): TrialsProvider => {
 
 export const App = () => {
   const [mode, setMode] = useState<Mode>(initialMode);
-  const [tab, setTab] = useState<Tab>('trials');
+  const [tab, setTab] = useState<Tab>(tabFromHash);
   const [provider, setProvider] = useState<TrialsProvider | null>(null);
   const [profiles, setProfiles] = useState<readonly Profile[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -84,6 +107,20 @@ export const App = () => {
       cancelled = true;
     };
   }, [mode]);
+
+  useEffect(() => {
+    if (isKiosk()) return;
+    if (window.location.hash.replace(/^#/, '') !== tab) {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+  }, [tab]);
+
+  // Back/forward, and anyone editing the hash by hand.
+  useEffect(() => {
+    const sync = () => setTab(tabFromHash());
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
 
   const selected = useMemo(
     () => profiles.find((profile) => profile.id === selectedId) ?? null,
@@ -172,19 +209,9 @@ export const App = () => {
         <div className="spacer" />
 
         <label className="field">
-          mode
-          <select value={mode} onChange={(event) => setMode(event.target.value as Mode)}>
-            {MODES.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field">
           patient
           <select
+            aria-label="patient"
             value={selectedId ?? ''}
             onChange={(event) => persist(profiles, event.target.value)}
           >
@@ -215,24 +242,27 @@ export const App = () => {
         <button onClick={removeSelected} disabled={profiles.length < 2}>
           remove
         </button>
-        <button onClick={() => void resetAll()}>reset demo</button>
+
+        {/* Last cell, so it takes the filled block: the mode is the most consequential
+            thing on this bar and reads like a status. */}
+        <label className="field">
+          mode
+          <select
+            aria-label="mode"
+            value={mode}
+            onChange={(event) => setMode(event.target.value as Mode)}
+          >
+            {MODES.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {entry.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="tabs">
-        {(
-          [
-            ['phone', 'Patient app'],
-            ['trials', 'Trials'],
-            // Not "My record": the patient-facing version of this is the phone's
-            // passport card, and two pages with that name is what confused people.
-            ['credential', 'Credential'],
-            ['clinic', 'Clinic'],
-            // Named for what it does rather than who does it: "Issuer" alongside "Clinic"
-            // reads as two names for the same thing.
-            ['issuer', 'Record editor'],
-            ['overview', 'Overview'],
-          ] as ReadonlyArray<[Tab, string]>
-        ).map(([id, label]) => (
+        {TABS.map(([id, label]) => (
           <button key={id} aria-selected={tab === id} onClick={() => setTab(id)}>
             {label}
           </button>
@@ -285,7 +315,13 @@ export const App = () => {
         )}
       </main>
 
-      {provider === null ? null : <LedgerDrawer provider={provider} revision={revision} />}
+      {provider === null ? null : (
+        <LedgerDrawer
+          provider={provider}
+          revision={revision}
+          onReset={() => void resetAll()}
+        />
+      )}
     </>
   );
 };

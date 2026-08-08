@@ -11,7 +11,8 @@
  * enrollment it produces shows up in the Overview and the ledger drawer.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import '../phone.css';
 import type { EnrollResult, TrialsProvider, TrialState } from '../providers/types.js';
 import type { Profile } from '../lib/profiles.js';
 import { credentialStatus, isUsable, STATUS_LABEL } from '../lib/credential-status.js';
@@ -54,6 +55,30 @@ const firstName = (displayName: string) => displayName.split(' ')[0] ?? displayN
 
 /** A fixed time, so screenshots and recordings stay reproducible. */
 const STATUS_TIME = '9:41';
+
+/**
+ * Tab icons.
+ *
+ * Inline paths rather than emoji: emoji carry their own colour and cannot take the tint
+ * on selection, which is the whole visual grammar of an iOS tab bar.
+ */
+const ICONS: Record<Screen, ReactNode> = {
+  home: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3.2 3 10.3V21h6.2v-6.1h5.6V21H21V10.3z" />
+    </svg>
+  ),
+  trials: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14 3v5.1l4.6 8.4A3 3 0 0 1 16 21H8a3 3 0 0 1-2.6-4.5L10 8.1V3zm-2 2h-.9v3.6L7.9 14h8.2l-3.2-5.4V5z" />
+    </svg>
+  ),
+  applications: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2.2 4 5.6v6.1c0 4.6 3.2 8.7 8 10.1 4.8-1.4 8-5.5 8-10.1V5.6zm-1.2 13.4L7.4 12.2l1.5-1.5 1.9 1.9 4.3-4.3 1.5 1.5z" />
+    </svg>
+  ),
+};
 
 export const MobileView = ({
   provider,
@@ -163,6 +188,7 @@ export const MobileView = ({
                 setScreen(id);
               }}
             >
+              <span className="phone-tab-icon">{ICONS[id]}</span>
               {label}
               {id === 'applications' && enrolled.length > 0 ? (
                 <span className="phone-badge">{enrolled.length}</span>
