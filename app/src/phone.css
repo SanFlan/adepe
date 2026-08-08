@@ -1,0 +1,662 @@
+/**
+ * The patient app, styled as a native mobile app rather than as part of this site.
+ *
+ * The rest of the interface is a control room and looks like one: square, hairline-ruled,
+ * two colours. A patient has never seen that interface and never will, so the phone gets
+ * its own system — iOS conventions, since that is what most people's mental model of "an
+ * app" actually is. Grouped inset lists on a grey ground, white cards with soft radii,
+ * a large title, one tint colour, 44px tap targets.
+ *
+ * Everything is scoped under `.phone`, so none of it can leak into the desktop views.
+ *
+ * Contrast was chosen rather than inherited. iOS's own #007AFF is only 4.0:1 on white and
+ * 3.6:1 on the grouped background, which is below AA for the small secondary text this
+ * screen is full of. The tint here is the same hue darkened to 5.8:1 on white, and the
+ * secondary grey and success green were picked the same way.
+ */
+
+.phone {
+  /* iOS system palette, adjusted for contrast. */
+  --tint: #0a63c9;
+  --tint-wash: #eaf1fb;
+  --ok: #1a7f37;
+  --ok-wash: #e8f5ec;
+  --label: #1c1c1e;
+  --label-2: #6c6c70;
+  --group-bg: #f2f2f7;
+  --card: #ffffff;
+  --sep: #d8d8dc;
+  --radius-l: 16px;
+  --radius-m: 12px;
+  --radius-s: 9px;
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  color: var(--label);
+
+  position: relative;
+  width: 372px;
+  height: 764px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--group-bg);
+  /* The bezel: the one piece of hardware imitation worth keeping. */
+  border: 10px solid #1c1c1e;
+  border-radius: 46px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.phone *,
+.phone *::before,
+.phone *::after {
+  box-sizing: border-box;
+}
+
+.phone button {
+  font: inherit;
+  letter-spacing: inherit;
+  border: none;
+  background: none;
+  color: var(--tint);
+  border-radius: var(--radius-m);
+  padding: 0;
+  cursor: pointer;
+}
+
+.phone button:hover:not(:disabled) {
+  background: none;
+  color: var(--tint);
+}
+
+.phone button:disabled {
+  cursor: not-allowed;
+}
+
+.phone button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--tint) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------- status bar */
+
+/* The island is centred on the device, not between its neighbours — so it is positioned
+   against the bar rather than being a flex child whose place depends on the text widths
+   either side of it. */
+.phone-status {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 26px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label);
+  background: var(--group-bg);
+  flex: none;
+}
+
+.phone-notch {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  width: 92px;
+  height: 26px;
+  background: #1c1c1e;
+  border-radius: 999px;
+}
+
+.phone-signal {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--label-2);
+}
+
+/* ----------------------------------------------------------------- screen */
+
+.phone-screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 22px 34px;
+  background: var(--group-bg);
+  -webkit-overflow-scrolling: touch;
+}
+
+.phone-h1 {
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+
+.phone-h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--label-2);
+  margin: 24px 0 8px 4px;
+}
+
+.phone-sub {
+  color: var(--label-2);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0 0 26px;
+}
+
+/* -------------------------------------------------------- passport (pass) */
+
+.passport {
+  border-radius: var(--radius-l);
+  padding: 18px;
+  margin-bottom: 18px;
+  background: var(--card);
+  border: 1px solid var(--sep);
+  color: var(--label);
+}
+
+/* An attested passport reads as a wallet pass: the tint carries it. */
+.passport.is-valid {
+  background: linear-gradient(145deg, #0a63c9, #0f4fa0);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(10, 99, 201, 0.28);
+}
+
+.passport header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 18px;
+}
+
+.passport-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.22);
+  color: currentColor;
+}
+
+.passport:not(.is-valid) .passport-dot {
+  background: #f2c14b;
+  color: #4a3708;
+}
+
+.passport strong {
+  font-size: 21px;
+  font-weight: 650;
+  display: block;
+  line-height: 1.15;
+}
+
+.passport-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 3px;
+}
+
+.passport footer {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 25%, transparent);
+  font-size: 12.5px;
+  opacity: 0.9;
+}
+
+/* ------------------------------------------------------- callouts + cards */
+
+.phone-callout {
+  border-radius: var(--radius-m);
+  padding: 13px 15px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  background: var(--tint-wash);
+  color: #123a68;
+}
+
+.phone-callout.is-quiet {
+  background: var(--card);
+  border: 1px solid var(--sep);
+  color: var(--label-2);
+}
+
+/*
+ * One card per trial rather than a grouped list with separators: three lines of content
+ * each made a shared list feel packed, and a trial is a decision worth giving its own
+ * surface.
+ *
+ * Note the `.phone` prefix. `.phone button` above is specificity (0,1,1) and would
+ * otherwise beat a bare `.phone-card` (0,1,0), stripping the background off every card.
+ */
+.phone .phone-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: none;
+  border-radius: var(--radius-l);
+  padding: 16px;
+  margin: 0 0 12px;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.phone .phone-card:hover:not(:disabled) {
+  background: var(--card);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.09);
+}
+
+.phone .phone-card:active {
+  transform: scale(0.985);
+  background: #f7f7fa;
+}
+
+.phone .phone-card.is-static {
+  cursor: default;
+  transform: none;
+}
+
+.phone-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.phone-card strong {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--label);
+}
+
+.phone-code {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tint);
+}
+
+.phone-meta {
+  font-size: 13px;
+  color: var(--label-2);
+}
+
+.phone-chip {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ececf1;
+  color: var(--label-2);
+  white-space: nowrap;
+}
+
+.phone-chip.good {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+/* ----------------------------------------------------------------- detail */
+
+.phone .phone-back {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tint);
+  padding: 6px 0 10px;
+  margin-left: -2px;
+}
+
+.phone-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0 4px;
+  padding: 15px;
+  background: var(--card);
+  border-radius: var(--radius-l);
+}
+
+.phone-facts dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--label-2);
+}
+
+.phone-facts dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--label);
+}
+
+.phone-criteria {
+  list-style: none;
+  margin: 0;
+  padding: 6px 4px;
+  display: grid;
+  gap: 2px;
+  background: var(--card);
+  border-radius: var(--radius-l);
+}
+
+.phone-criteria li {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  color: var(--label);
+  padding: 8px 11px;
+}
+
+.phone-criteria li > span:first-child {
+  font-weight: 700;
+}
+
+.phone-criteria li em {
+  font-weight: 400;
+  font-size: 12.5px;
+  color: var(--label-2);
+}
+
+.phone-criteria li.ok > span:first-child {
+  color: var(--ok);
+}
+
+.phone-criteria li.no {
+  background: #fdeeee;
+  border-radius: var(--radius-s);
+}
+
+.phone-criteria li.no > span:first-child {
+  color: #b3261e;
+}
+
+.phone-fineprint {
+  font-size: 12.5px;
+  color: var(--label-2);
+  margin: 12px 4px 0;
+  line-height: 1.45;
+}
+
+.phone-result {
+  border-radius: var(--radius-m);
+  padding: 13px 15px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  margin-top: 16px;
+  background: #fdeeee;
+  color: #7d201a;
+}
+
+/* The one full-width action, at iOS's 50px control height. */
+.phone .phone-cta {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px;
+  min-height: 50px;
+  border-radius: var(--radius-m);
+  background: var(--tint);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.phone .phone-cta:hover:not(:disabled) {
+  background: #0a58b0;
+  color: #fff;
+}
+
+.phone .phone-cta:disabled {
+  background: #e3e3e8;
+  color: #8e8e93;
+}
+
+/* --------------------------------------------------------------- tab bar */
+
+.phone-tabs {
+  flex: none;
+  display: flex;
+  border-top: 1px solid var(--sep);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  padding-bottom: 6px;
+}
+
+.phone .phone-tabs button {
+  flex: 1;
+  border-radius: 0;
+  padding: 8px 0 4px;
+  font-size: 10.5px;
+  /* Constant weight: bolding on selection would resize the label and shift the icon. */
+  font-weight: 600;
+  color: var(--label-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+  min-height: 48px;
+}
+
+.phone .phone-tabs button[aria-selected='true'] {
+  color: var(--tint);
+}
+
+.phone-tab-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.phone-tab-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: currentColor;
+}
+
+.phone-badge {
+  position: absolute;
+  top: 4px;
+  right: 50%;
+  transform: translateX(22px);
+  background: #d92d20;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  padding: 0 5px;
+  line-height: 17px;
+  text-align: center;
+}
+
+/* -------------------------------------------------------- submitted sheet */
+
+.phone-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: var(--card);
+  padding: 56px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: sheet-in 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.phone-sheet h2 {
+  margin: 26px 0 10px;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--label);
+}
+
+.phone-sheet-copy {
+  margin: 0;
+  color: var(--label-2);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.phone-sheet-trial {
+  margin-top: 26px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 15px;
+  border-radius: var(--radius-l);
+  background: var(--group-bg);
+  text-align: left;
+}
+
+.phone-sheet-fine {
+  margin: 18px 0 0;
+  font-size: 12.5px;
+  color: var(--label-2);
+  line-height: 1.5;
+}
+
+.phone .phone-sheet .phone-cta {
+  margin-top: auto;
+}
+
+/* -- animated checkmark -- */
+
+.tick {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  background: var(--ok-wash);
+  animation: tick-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes tick-pop {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+}
+
+.tick svg {
+  width: 64px;
+  height: 64px;
+}
+
+.tick circle,
+.tick path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tick-ring {
+  stroke: var(--ok);
+  stroke-width: 3;
+  /* 2 * pi * r */
+  stroke-dasharray: 176;
+  stroke-dashoffset: 176;
+  animation: tick-ring 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.tick-mark {
+  stroke: var(--ok);
+  stroke-width: 5;
+  stroke-dasharray: 44;
+  stroke-dashoffset: 44;
+  animation: tick-mark 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+}
+
+@keyframes tick-ring {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tick-mark {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-sheet,
+  .tick,
+  .tick-ring,
+  .tick-mark {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
+
+  .tick-ring,
+  .tick-mark {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ kiosk */
+
+.kiosk {
+  height: 100vh;
+  overflow: hidden;
+  background: var(--group-bg, #f2f2f7);
+}
+
+.phone-stage.is-kiosk {
+  height: 100%;
+  gap: 0;
+}
+
+.phone.is-kiosk {
+  width: 100vw;
+  height: 100vh;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* No hardware to imitate when the window *is* the device. */
+.phone.is-kiosk .phone-notch {
+  display: none;
+}

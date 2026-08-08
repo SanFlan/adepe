@@ -1,3 +1,7 @@
 /node_modules/
 /logs/
 /midnight-level-db/
+
+# Compiler output: regenerate with `yarn compile`. The prover/verifier keys alone are
+# several MB, and they are reproducible from the .compact sources.
+/contracts/managed/

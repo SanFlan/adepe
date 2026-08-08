@@ -1,0 +1,640 @@
+/**
+ * Modelled on utrecht.jp: white ground, one saturated accent, hairline rules, hard corners.
+ *
+ * The structure is taken from that site's own stylesheet rather than guessed —
+ * `body{background-color:#fff;color:#db0000;letter-spacing:-.02em}`, borders uniformly
+ * `solid 1px`, weights 400 and 700 only. Two things carry the look: the accent is the
+ * *default* text colour, with black reserved for long-form prose, and every surface is an
+ * outline rather than a fill.
+ *
+ * The reference's accent is #db0000. This uses a blue, #1884e6.
+ *
+ * One caveat that comes with a lighter accent: #1884e6 sits at 3.8:1 against white, which
+ * clears WCAG AA for large text and for UI borders but not the 4.5:1 wanted for small
+ * text — and the accent *is* the default text colour here, including labels down to 10px.
+ * The same ratio applies to white text inside the filled blocks. If that proves hard to
+ * read, --accent-text below can be darkened on its own without disturbing the fills.
+ *
+ * The accent means "look at this". That covers both an action worth taking and a criterion
+ * that failed — they never appear in the same component, so the readings do not collide.
+ *
+ * No rounded corners, no shadows, no gradients, no second accent.
+ */
+
+:root {
+  --accent: #1884e6;
+  /* Split out so small accent text can be darkened for contrast without changing the
+     fills, rules and borders that give the palette its character. */
+  --accent-text: var(--accent);
+  --ink: #000;
+  --bg: #fff;
+  --fill: #f4f4f8;
+
+  /* Kept so any stray reference still resolves to something on-palette. */
+  --line: var(--accent);
+  --text: var(--accent);
+  --muted: var(--ink);
+  --panel: var(--bg);
+  --panel-2: var(--bg);
+  --good: var(--accent);
+  --bad: var(--accent);
+  --warn: var(--accent);
+  --radius: 0;
+
+  --sans: "GT America Standard", "Helvetica Neue", Helvetica, "Yu Gothic", YuGothic,
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans", meiryo, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.667;
+  letter-spacing: -0.02em;
+  font-feature-settings: "palt";
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------- controls */
+
+/*
+ * Free-standing controls are dashed; controls that sit inside a rule grid (tab cells,
+ * top-bar dividers, the phone's tab bar) keep that grid's solid rule instead, so the
+ * dashes read as "this is operable" rather than as noise.
+ */
+button {
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  background: var(--bg);
+  border: dashed 1px var(--accent);
+  border-radius: 0;
+  padding: 6px 14px;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: solid 2px var(--accent);
+  outline-offset: 1px;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* The filled block, as on the reference's Cart control. */
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+select,
+input,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--accent);
+  background: var(--bg);
+  border: dashed 1px var(--accent);
+  border-radius: 0;
+  padding: 6px 10px;
+}
+
+/*
+ * The native arrow reserves its own gutter on top of whatever padding we set, which left a
+ * wide dead zone between the value and the chevron and made every select look oversized.
+ * Drawing the chevron ourselves puts that spacing under our control.
+ *
+ * The stroke colour is baked into the data URI — SVG backgrounds cannot read currentColor
+ * — so it has to be updated alongside --accent.
+ */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1.75 6 6.25 11 1.75' fill='none' stroke='%231884e6' stroke-width='1.75' stroke-linecap='square'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 11px 7px;
+}
+
+textarea {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
+  width: 100%;
+  resize: vertical;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* "muted" now means prose rather than grey: black is the quiet colour here. */
+.muted {
+  color: var(--ink);
+}
+
+/* ----------------------------------------------------------------- header */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: solid 1px var(--accent);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.topbar > * {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-right: solid 1px var(--accent);
+}
+
+.topbar > .spacer {
+  border-right: none;
+  flex: 1;
+  padding: 0;
+}
+
+.topbar > *:last-child {
+  border-right: none;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.topbar > *:last-child:hover {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.brand {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.brand span {
+  color: var(--ink);
+  font-weight: 400;
+  margin-left: 10px;
+  text-transform: none;
+}
+
+/*
+ * A label and its value, not two runs of the same text: the label is small, uppercase and
+ * quiet, the value is the larger bold thing inside the dashed box. Without that contrast
+ * the two ran together and the box looked pinched around its contents.
+ */
+.field {
+  gap: 12px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field select {
+  padding: 6px 28px 6px 11px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: solid 1px var(--accent);
+}
+
+/*
+ * Uppercased in CSS rather than in the labels, so the source and the tests keep reading in
+ * sentence case.
+ *
+ * The weight is constant: bolding on selection changes the text's measured width, which
+ * resizes the cell and reflows every tab after it. Selection is carried by the fill alone.
+ */
+.tabs button {
+  border: none;
+  border-right: solid 1px var(--accent);
+  border-radius: 0;
+  padding: 9px 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tabs button[aria-selected='true'] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+main {
+  padding: 22px 22px 130px;
+  max-width: 1440px;
+}
+
+/* Controls sitting directly in the bar: the cell draws the solid rule, the control keeps
+   its dashes so it still looks operable. */
+.topbar > button,
+.topbar > select {
+  background: none;
+  font-weight: 700;
+}
+
+.topbar > button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ----------------------------------------------------------------- blocks */
+
+.card {
+  background: var(--bg);
+  border: solid 1px var(--accent);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.card h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* Long-form explanation: black, as the reference sets its body copy. */
+.note {
+  color: var(--ink);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: minmax(150px, auto) 1fr;
+  gap: 3px 16px;
+  font-size: 13px;
+}
+
+.kv dt {
+  color: var(--accent);
+}
+
+.kv dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding: 1px 9px;
+  border: solid 1px var(--accent);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* The strongest state gets the filled block; everything else is an outline. */
+.pill.good {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+/* Quiet, because "not eligible" is a fact rather than a call to act. */
+.pill.bad {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.pill.warn {
+  border-style: dotted;
+}
+
+.signed-badge {
+  border-style: dotted;
+}
+
+.errors {
+  color: var(--accent);
+  font-size: 13px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.bar {
+  height: 4px;
+  background: var(--bg);
+  border: solid 1px var(--accent);
+  overflow: hidden;
+}
+
+.bar > div {
+  height: 100%;
+  background: var(--accent);
+}
+
+.code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* ----------------------------------------------------------------- trials */
+
+.trial-rows {
+  display: grid;
+  gap: 0;
+  border-top: solid 1px var(--accent);
+}
+
+/* Shared column track: the criteria line up between rows, which is the point. */
+.trial-head,
+.trial {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.5fr) minmax(300px, 1.7fr) 120px 150px;
+  gap: 18px;
+  align-items: center;
+}
+
+.trial-head {
+  padding: 6px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: solid 1px var(--accent);
+}
+
+.trial {
+  padding: 14px 16px;
+  border-bottom: solid 1px var(--accent);
+}
+
+.trial h4 {
+  margin: 4px 0 3px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.trial-meta {
+  font-size: 12px;
+  color: var(--ink);
+}
+
+/* -- criteria strip -- */
+
+.trial-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.crit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  padding: 1px 7px;
+  border: solid 1px var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: help;
+}
+
+.crit b {
+  font-weight: 700;
+}
+
+/* A failed criterion is the thing to look at, so it becomes a filled block. */
+.crit.no {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* -- enrolment and action -- */
+
+.trial-count {
+  color: var(--accent);
+}
+
+.trial-count .bar {
+  margin-top: 5px;
+}
+
+.trial-action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.trial-result {
+  /* Spans every column, so a result pushes the row taller only when there is one. */
+  grid-column: 1 / -1;
+  padding: 8px 11px;
+  font-size: 13px;
+  border: solid 1px var(--accent);
+  color: var(--ink);
+}
+
+.trial-result.enrolled {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .trial-head {
+    display: none;
+  }
+
+  .trial {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* ----------------------------------------------------------------- roster */
+
+.roster {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.roster th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 5px 10px;
+  border-bottom: solid 1px var(--accent);
+}
+
+.roster td {
+  padding: 10px;
+  border-bottom: solid 1px var(--accent);
+  vertical-align: top;
+  color: var(--ink);
+}
+
+.roster tr:last-child td {
+  border-bottom: none;
+}
+
+/* The header's patient switcher still points at one of these rows. */
+.roster tr.is-selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* ------------------------------------------------- phone: desktop framing */
+/*
+ * Only the surround lives here. The phone itself has its own stylesheet, `phone.css`,
+ * because a patient-facing app has no business inheriting a control room's square
+ * editorial styling.
+ */
+
+.phone-stage {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.phone-aside {
+  flex: 1;
+  min-width: 260px;
+  max-width: 380px;
+}
+
+.phone-aside h3 {
+  margin: 18px 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------------- config */
+
+.modes {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.modes .mode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 14px;
+  border: dashed 1px var(--accent);
+}
+
+.modes .mode strong {
+  font-size: 14px;
+}
+
+.modes .mode span {
+  font-size: 12.5px;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.modes .mode.is-active {
+  background: var(--accent);
+  border-style: solid;
+  color: var(--bg);
+}
+
+.modes .mode.is-active span {
+  color: var(--bg);
+}
+
+.modes .mode:hover span {
+  color: var(--bg);
+}
+
+.ledger-panels {
+  margin-top: 14px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.ledger-panels .panel h5 {
+  margin: 0 0 3px;
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+}

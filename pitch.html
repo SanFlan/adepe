@@ -1,0 +1,460 @@
+<title>Adepe: elegibilidad de conocimiento cero para ensayos clínicos</title>
+<style>
+  /*
+   * Same system as app/src/app.css: white ground, one saturated accent used as the
+   * default text colour, black reserved for prose, hairline 1px outlines, hard corners,
+   * weights 400/700 only, -0.02em tracking. The deck is the app seen from further away.
+   */
+
+  :root {
+    --accent: #1884e6;
+    --accent-quiet: #9dc9f2;
+    --ink: #000;
+    --bg: #fff;
+    --fill: #f4f4f8;
+    --sans: "GT America Standard", "Helvetica Neue", Helvetica, "Yu Gothic", YuGothic,
+      -apple-system, BlinkMacSystemFont, "Hiragino Sans", meiryo, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --accent: #5aa9f7;
+      --accent-quiet: #2b5c85;
+      --ink: #f4f4f6;
+      --bg: #0a0a0c;
+      --fill: #15161a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --accent: #5aa9f7;
+    --accent-quiet: #2b5c85;
+    --ink: #f4f4f6;
+    --bg: #0a0a0c;
+    --fill: #15161a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--accent);
+    font-family: var(--sans);
+    letter-spacing: -0.02em;
+    line-height: 1.5;
+    font-size: clamp(16px, 0.75vw + 0.75vh, 24px);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  b, strong, h1, h2, h3 { font-weight: 700; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.03em; text-wrap: balance; }
+  p { margin: 0; }
+  ul { margin: 0; padding: 0; list-style: none; }
+
+  /* ------------------------------------------------------------------ frame */
+
+  .deck {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0.9em 2.2em;
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+  .bar--top { border-bottom: solid 1px var(--accent); }
+  .bar--bottom { border-top: solid 1px var(--accent); }
+
+  .bar__wordmark { font-weight: 700; }
+  .bar__section { color: var(--accent-quiet); }
+  .counter { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+  .stage { position: relative; overflow: hidden; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 3.2em 2.2em;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.6em;
+    overflow-y: auto;
+  }
+  .slide.is-on { display: flex; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide.is-on > * { animation: rise 340ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards; }
+    .slide.is-on > *:nth-child(2) { animation-delay: 40ms; }
+    .slide.is-on > *:nth-child(3) { animation-delay: 80ms; }
+    .slide.is-on > *:nth-child(4) { animation-delay: 120ms; }
+    .slide.is-on > *:nth-child(5) { animation-delay: 160ms; }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(0.5em); } }
+
+  /* ------------------------------------------------------------------ type */
+
+  .eyebrow {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+  }
+
+  .title { font-size: clamp(2.2em, 4.6vw, 4.4em); line-height: 1.02; }
+  .head { font-size: clamp(1.5em, 2.5vw, 2.5em); line-height: 1.1; max-width: 20ch; }
+  .lede { font-size: 1.15em; line-height: 1.4; max-width: 46ch; color: var(--ink); }
+  .prose { color: var(--ink); max-width: 62ch; }
+  .small { font-size: 0.78em; line-height: 1.5; }
+  .note { font-size: 0.72em; line-height: 1.5; color: var(--accent-quiet); max-width: 90ch; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+
+  /* ------------------------------------------------------------------ parts */
+
+  .cols { display: grid; gap: 1px; background: var(--accent); border: solid 1px var(--accent); }
+  .cols > * { background: var(--bg); padding: 1.2em 1.3em; }
+  .cols--2 { grid-template-columns: 1fr 1fr; }
+  .cols--3 { grid-template-columns: repeat(3, 1fr); }
+  .cols--5 { grid-template-columns: repeat(5, 1fr); }
+  .cols--5 > * { display: flex; flex-direction: column; }
+  .cols--5 .phase__cost { margin-top: auto; }
+
+  .box { border: solid 1px var(--accent); padding: 1.2em 1.3em; }
+  .box--fill { background: var(--fill); }
+  .box--solid { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .box--solid .prose, .box--solid .lede { color: var(--bg); }
+
+  .stack { display: flex; flex-direction: column; gap: 0.5em; }
+  .stack--wide { gap: 1em; }
+  .row { display: flex; gap: 1em; align-items: baseline; flex-wrap: wrap; }
+
+  .tick { display: flex; gap: 0.7em; }
+  .tick::before { content: "·"; flex: none; }
+
+  .stat { font-size: clamp(1.8em, 3.4vw, 3.2em); line-height: 1; font-weight: 700; }
+  .stat--sm { font-size: clamp(1.3em, 2vw, 2em); }
+
+  .phase__cost {
+    height: 0.55em;
+    background: var(--accent);
+    margin-top: 0.8em;
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.88em; }
+  th, td { border-bottom: solid 1px var(--accent); padding: 0.55em 0.7em; text-align: right; }
+  th { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.08em; }
+  th:first-child, td:first-child { text-align: left; color: var(--ink); }
+  tbody td { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  tfoot td { font-weight: 700; border-bottom: none; border-top: solid 1px var(--accent);
+             font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tfoot td:first-child { font-family: var(--sans); color: var(--accent); }
+  .scroll-x { overflow-x: auto; }
+
+  .flow { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+  .flow__step { flex: 1 1 0; min-width: 9em; border: solid 1px var(--accent); border-right: none; padding: 1em; }
+  .flow__step:last-child { border-right: solid 1px var(--accent); }
+  .flow__n { font-family: var(--mono); font-size: 0.75em; letter-spacing: 0; }
+
+  code, .code { font-family: var(--mono); font-size: 0.86em; letter-spacing: 0; }
+
+  .swap { display: grid; grid-template-columns: auto 1fr; gap: 0.6em 1.1em; align-items: baseline; }
+  .swap__k { font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--ink); }
+  .swap__v { font-size: clamp(1.1em, 1.9vw, 1.7em); font-weight: 700; color: var(--ink); }
+  .swap__v em { font-style: normal; color: var(--accent); }
+
+  /* ------------------------------------------------------------------ nav */
+
+  .dots { display: flex; gap: 0.35em; align-items: center; }
+  .dot {
+    width: 0.7em; height: 0.7em; padding: 0; border: solid 1px var(--accent);
+    background: transparent; cursor: pointer; border-radius: 0;
+  }
+  .dot[aria-current="true"] { background: var(--accent); }
+  .dot:focus-visible, .theme:focus-visible { outline: solid 2px var(--accent); outline-offset: 2px; }
+
+  .theme {
+    font: inherit; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    color: var(--accent); background: transparent; border: solid 1px var(--accent);
+    padding: 0.15em 0.6em; cursor: pointer; border-radius: 0;
+  }
+
+  @media (max-width: 720px) {
+    .cols--3, .cols--5, .cols--2 { grid-template-columns: 1fr; }
+    .slide { padding: 1.6em 1.1em; }
+    .bar { padding: 0.7em 1.1em; }
+  }
+</style>
+
+<div class="deck">
+  <div class="bar bar--top">
+    <span class="bar__wordmark">Adepe</span>
+    <span class="bar__section" id="section">Elegibilidad de ensayos con conocimiento cero</span>
+  </div>
+
+  <main class="stage" id="stage">
+
+    <!-- 1 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="Elegibilidad de ensayos con conocimiento cero">
+      <p class="eyebrow">Construido en Midnight</p>
+      <h1 class="title">Demostrá que calificás.<br>No revelás nada.</h1>
+      <p class="lede">Adepe convierte un historial médico firmado por un hospital en una
+        prueba de conocimiento cero de elegibilidad para ensayos. El paciente encuentra
+        el estudio. El patrocinador obtiene un inscrito pre-calificado. Nadie obtiene
+        el historial.</p>
+    </section>
+
+    <!-- 2 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="Dónde está el dinero">
+      <h2 class="head">Un desarrollo clinico puede durar una década.</h2>
+      <div class="cols cols--5">
+        <div>
+          <p class="eyebrow">Fase 1</p>
+          <p class="small">Dosis y seguridad</p>
+        </div>
+        <div>
+          <p class="eyebrow">Fase 2a</p>
+          <p class="small">Prueba de concepto</p>
+        </div>
+        <div>
+          <p class="eyebrow">Fase 2b</p>
+          <p class="small">Dosis definitiva<br>100–300 pacientes</p>
+        </div>
+        <div>
+          <p class="eyebrow">Fase 3</p>
+          <p class="small">Significancia estadística<br>300–3.000 pacientes</p>
+        </div>
+        <div>
+          <p class="eyebrow">Fase 4</p>
+          <p class="small">Farmacovigilancia</p>
+        </div>
+      </div>
+      <div class="cols cols--2">
+        <div><p class="prose"><b>Fases 1–3: perdés plata.</b> El reclutamiento y la
+          retención representan aproximadamente un tercio del costo, y el contador corre
+          haya o no inscriptos.</p></div>
+        <div><p class="prose"><b>Fase 4: riqueza generacional.</b> Cada mes que llegás
+          tarde es un mes de vida de patente gastado en un fármaco no aprobado.</p></div>
+      </div>
+    </section>
+
+    <!-- 3 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="El problema">
+      <h2 class="head">La inscripción está rota en ambos lados de la mesa.</h2>
+      <div class="cols cols--2">
+        <div class="stack stack--wide">
+          <p class="eyebrow">Lado del patrocinador</p>
+          <p class="stat num">~30%</p>
+          <p class="small">de los pacientes evaluados no superan la elegibilidad. En
+            oncología, cerca del 40%.</p>
+          <ul class="stack">
+            <li class="tick">La Fase 2b necesita 100–300 pacientes; la Fase 3, 300–3.000</li>
+            <li class="tick">Aproximadamente 8 de cada 10 ensayos no cumplen su cronograma de inscripción</li>
+            <li class="tick">Se activan sitios que nunca inscriben un solo paciente</li>
+          </ul>
+        </div>
+        <div class="stack stack--wide">
+          <p class="eyebrow">Lado del paciente</p>
+          <p class="stat num">0</p>
+          <p class="small">formas de buscar un ensayo sin entregarle tu diagnóstico
+            a un desconocido.</p>
+          <ul class="stack">
+            <li class="tick">Gasto de bolsillo y días de trabajo perdidos por una evaluación que falla</li>
+            <li class="tick">El estrés de perseguir estudios estando enfermo</li>
+            <li class="tick">Historial oncológico divulgado a cada patrocinador al que te acercás</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="La inversión">
+      <p class="eyebrow">Invertimos el juego</p>
+      <div class="swap">
+        <span class="swap__k">Hoy</span>
+        <span class="swap__v">Hospital <em>→ busca →</em> paciente</span>
+        <span class="swap__k">Adepe</span>
+        <span class="swap__v">Paciente <em>→ busca →</em> estudio</span>
+      </div>
+      <p class="prose">Cuando
+        busca el patrocinador, cada candidato comparte su historial para ser considerado. Cuando
+        busca el paciente, solo se comparte un proof. El mismo resultado sin tener que exponerse. </p>
+    </section>
+
+    <!-- 5 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="Cómo funciona">
+      <h2 class="head">Cuatro pasos, una prueba.</h2>
+      <div class="flow">
+        <div class="flow__step stack">
+          <span class="flow__n">01</span>
+          <p><b>El hospital firma</b></p>
+          <p class="small">Un proveedor registrado firma con Schnorr el historial médico
+            (edad y cinco criterios oncológicos) y se lo entrega al paciente. En la
+            cadena, solo se registra la clave pública del proveedor.</p>
+        </div>
+        <div class="flow__step stack">
+          <span class="flow__n">02</span>
+          <p><b>El paciente guarda</b></p>
+          <p class="small">El registro firmado vive en la billetera del paciente como
+            testigo. Nunca se sube, nunca se pone en custodia, nunca se envía a un
+            patrocinador.</p>
+        </div>
+        <div class="flow__step stack">
+          <span class="flow__n">03</span>
+          <p><b>El circuito verifica</b></p>
+          <p class="small"><code>Verify(trialID)</code> valida la firma, confirma que el
+            firmante es un proveedor registrado y compara el registro con los criterios
+            del ensayo, todo dentro de la prueba.</p>
+        </div>
+        <div class="flow__step stack">
+          <span class="flow__n">04</span>
+          <p><b>El seudónimo se inscribe</b></p>
+          <p class="small">Una clave específica del ensayo, derivada del secreto del
+            paciente y el ID del ensayo, se suma al conjunto elegible. El patrocinador
+            ve un inscrito calificado y puede invitarlo.</p>
+        </div>
+      </div>
+      <p class="note">La clave de inscripción mezcla el ID del ensayo a propósito: un
+        paciente elegible para cuatro estudios aparece como cuatro claves sin relación,
+        de modo que nadie puede unir los conjuntos públicos para reconstruir el historial
+        de ensayos de una persona. Volver a probar es idempotente.</p>
+    </section>
+
+    <!-- 6 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="Qué sale del dispositivo">
+      <h2 class="head">El límite de divulgación, exactamente.</h2>
+      <div class="cols cols--2">
+        <div class="stack">
+          <p class="eyebrow">Público en Midnight</p>
+          <ul class="stack code">
+            <li class="tick">trialID al que se aplica</li>
+            <li class="tick">los criterios del ensayo, fijados al crearlo</li>
+            <li class="tick">claves públicas de proveedores registrados</li>
+            <li class="tick">un seudónimo de inscripción por ensayo</li>
+          </ul>
+        </div>
+        <div class="stack">
+          <p class="eyebrow">Nunca sale del paciente</p>
+          <ul class="stack code">
+            <li class="tick">age</li>
+            <li class="tick">nivolumab_counterindication</li>
+            <li class="tick">ipilimumab_counterindication</li>
+            <li class="tick">active_autoimmune_therapy</li>
+            <li class="tick">chemotherapy</li>
+            <li class="tick">immunotherapy</li>
+            <li class="tick">qué hospital firmó el registro</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">Una verificación fallida no escribe nada: un paciente inelegible
+        es indistinguible de uno que nunca se postuló.</p>
+    </section>
+
+    <!-- 7 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="El costo del reclutamiento">
+      <h2 class="head">El reclutamiento es un tercio del costo de un ensayo.</h2>
+      <div class="cols cols--3">
+        <div class="stack">
+          <p class="stat num">$6.533</p>
+          <p class="small">costo por paciente inscrito en reclutamiento y retención</p>
+        </div>
+        <div class="stack">
+          <p class="stat num">8 de 10</p>
+          <p class="small">ensayos no cumplen su cronograma de inscripción</p>
+        </div>
+        <div class="stack">
+          <p class="stat num">~30%</p>
+          <p class="small">de los pacientes evaluados no superan la elegibilidad; en oncología, cerca del 40%</p>
+        </div>
+      </div>
+      <p class="note">Fuente: Tufts CSDD, datos de enrollment publicados.</p>
+    </section>
+
+    <!-- 8 ------------------------------------------------------------------ -->
+    <section class="slide" data-section="Lo que sigue">
+      <p class="eyebrow">Para profundizar</p>
+      <h2 class="title">Qué más se puede hacer<br>con Midnight ZK?</h2>
+      <div class="cols cols--3">
+        <div><p class="eyebrow">Criterios más ricos</p><p class="small">Valores de
+          laboratorio, estadificación y líneas previas de tratamiento son campos adicionales
+          en el mismo circuito Compact. La prueba escala sin cambiar el contrato.</p></div>
+        <div><p class="eyebrow">Credenciales reutilizables</p><p class="small">El registro
+          firmado por el hospital puede probarse ante múltiples estudios con pseudónimos
+          independientes. Un paciente nunca vincula sus aplicaciones entre sí.</p></div>
+        <div><p class="eyebrow">Red de confianza</p><p class="small">El registro on-chain
+          puede conectarse a listas nacionales de acreditación: una firma vale legalmente
+          sin revelar qué institución emitió el registro.</p></div>
+      </div>
+      <p class="lede">Adepe: el paciente busca, y se queda con el historial.</p>
+    </section>
+
+  </main>
+
+  <div class="bar bar--bottom">
+    <div class="dots" id="dots"></div>
+    <span class="counter" id="counter">01 / 10</span>
+    <!-- <button class="theme" id="theme" type="button">Theme</button> -->
+  </div>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var dotsEl = document.getElementById('dots');
+    var counter = document.getElementById('counter');
+    var section = document.getElementById('section');
+    var i = 0;
+
+    var dots = slides.map(function (_, n) {
+      var b = document.createElement('button');
+      b.className = 'dot';
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Slide ' + (n + 1));
+      b.addEventListener('click', function () { go(n); });
+      dotsEl.appendChild(b);
+      return b;
+    });
+
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+    function go(n) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      slides.forEach(function (s, k) { s.classList.toggle('is-on', k === i); });
+      dots.forEach(function (d, k) { d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+      counter.textContent = pad(i + 1) + ' / ' + pad(slides.length);
+      section.textContent = slides[i].dataset.section || '';
+      if (location.hash !== '#' + (i + 1)) history.replaceState(null, '', '#' + (i + 1));
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { go(i + 1); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(i - 1); e.preventDefault(); }
+      else if (e.key === 'Home') { go(0); }
+      else if (e.key === 'End') { go(slides.length - 1); }
+    });
+
+    document.getElementById('stage').addEventListener('click', function (e) {
+      if (e.target.closest('a, button')) return;
+      go(i + (e.clientX < window.innerWidth / 3 ? -1 : 1));
+    });
+
+    document.getElementById('theme').addEventListener('click', function () {
+      var now = document.documentElement.getAttribute('data-theme');
+      var dark = now ? now === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    });
+
+    go(parseInt((location.hash || '#1').slice(1), 10) - 1 || 0);
+  })();
+</script>
