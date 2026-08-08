@@ -45,6 +45,14 @@ const handler = async (req, res) => {
 
   let stat = await fs.stat(path).catch(() => null);
   if (stat?.isDirectory()) {
+    // A directory must answer at a trailing slash, or every relative link inside its
+    // index.html resolves one level too high: at /pitch, the deck's own `pitch.pdf`
+    // would mean /pitch.pdf, which is not a file and so falls back to the app shell --
+    // an HTML page delivered under a .pdf name.
+    if (!url.pathname.endsWith('/')) {
+      res.writeHead(301, { location: url.pathname + '/' + url.search }).end();
+      return;
+    }
     path = join(path, 'index.html');
     stat = await fs.stat(path).catch(() => null);
   }

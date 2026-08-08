@@ -144,7 +144,8 @@ echo "    app  ok"
 # The body is captured before matching rather than piped into `grep -q`: under `pipefail`
 # that pipeline fails on success, because grep exits at the first match and curl then dies
 # of SIGPIPE.
-pitch=$(curl -sS --max-time 60 "$url/pitch")
+# -L: /pitch is a directory, so it redirects to /pitch/ before serving anything.
+pitch=$(curl -sSL --max-time 60 "$url/pitch")
 if printf '%s' "$pitch" | grep -q 'ensayos'; then
   echo "    pitch ok"
 else
