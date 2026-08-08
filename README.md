@@ -172,6 +172,52 @@ the roster.
 wrong connector version, wrong network, missing proof server, rejected connection — but the
 successful path has never been run against real Lace. Treat the first attempt as a test.
 
+## Hosted demo
+
+The app is a static bundle, so it hosts anywhere. It is currently on a
+[sprite](https://sprites.dev):
+
+```
+https://hackbuenosaires-260808-adepe-fsfr.sprites.app
+```
+
+Deploy or redeploy with:
+
+```
+make deploy-sprite SPRITE=<name> PUBLIC=1
+```
+
+Safe to repeat. The same name redeploys in place and keeps its URL; a new name creates a
+new sprite. Drop `PUBLIC=1` and the URL stays behind Sprites sign-in, which is the default
+for a fresh sprite. `scripts/deploy-sprite.sh` documents the details.
+
+The build happens **here**, not there: compiling the contract needs the Compact compiler,
+which the sprite does not have. Only `app/dist` is uploaded. It is served by
+`scripts/serve.mjs`, which exists because a stock static server gets two things wrong —
+WASM must arrive as `application/wasm` or `instantiateStreaming` rejects it, and the
+proving keys under `zk/` have no extension a mime table recognizes. It runs as a sprite
+*service*, so it survives reboots and a paused sprite wakes on the first request.
+
+**The sprite has no environment of its own, and no secrets.** No repository, no toolchain,
+no `.env`. That makes the split worth stating plainly:
+
+- Every `VITE_` variable in `app/.env.local` is inlined into the bundle **at build time,
+  on this machine**, and is then public — readable by any visitor. `VITE_ISSUER_SEED` is
+  one of these. Changing one means building and deploying again.
+- `contract/.env.preview` — the funded seed, and `ADEPE_ADMIN_SECRET` — is read only by
+  the Node scripts under `contract/`. The build never touches it and it never leaves this
+  machine. Changing it changes nothing about what is deployed.
+
+What that costs, for a link you send someone: **Mocked** and **Simulated** work for anyone
+who opens it, and are what a visitor sees by default. **Local proofs** and **Preview
+testnet** still need a proof server on the visitor's own machine — Preview also needs Lace
+— so those two modes do not travel over a URL. That is a property of the modes, not of the
+hosting.
+
+And the warning in *Before any public deployment* is no longer hypothetical while this URL
+is up: the issuer signing key is in the bundle, so anyone can mint credentials the preview
+contract accepts.
+
 ## Environment
 
 `contract/.env.example` and `app/.env.example` list every variable with instructions.

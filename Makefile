@@ -16,7 +16,8 @@ MANAGED  := contract/contracts/managed/hello-world/contract/index.js
 SOURCES  := contract/contracts/hello-world.compact contract/contracts/schnorr.compact
 
 .PHONY: help install compile dev build test test-contract typecheck \
-        proof-server proof-server-stop env-up env-down deploy-preview status-preview clean
+        proof-server proof-server-stop env-up env-down deploy-preview status-preview \
+        deploy-sprite clean
 
 help: ## List targets
 	@grep -hE '^[a-z][a-z-]*:.*?## ' $(MAKEFILE_LIST) \
@@ -75,6 +76,14 @@ deploy-preview: $(MANAGED) contract/node_modules proof-server ## Deploy to the p
 
 status-preview: $(MANAGED) contract/node_modules ## Read the preview deployment's public state
 	cd contract && yarn status:preview
+
+# ------------------------------------------------------------------- hosting
+
+SPRITE ?=
+
+deploy-sprite: ## Deploy the built app to a sprite: make deploy-sprite SPRITE=name [PUBLIC=1]
+	@test -n "$(SPRITE)" || { echo "set SPRITE=<name>, e.g. make deploy-sprite SPRITE=adepe-demo PUBLIC=1"; exit 1; }
+	./scripts/deploy-sprite.sh $(SPRITE) $(if $(PUBLIC),--public,)
 
 test-contract: $(MANAGED) contract/node_modules ## Integration test against the local network
 	@echo "Requires the local network. Run 'make env-up' first if it is not running."

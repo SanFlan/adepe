@@ -1,0 +1,3 @@
+# Written by `sprite use` to remember which sprite this directory talks to. Local, and
+# not something a clone should inherit.
+.sprite
