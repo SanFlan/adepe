@@ -29,9 +29,8 @@ export const CredentialView = ({ profile }: { profile: Profile }) => {
           <span className={`pill ${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>
         </div>
         <p className="note" style={{ marginTop: 8, marginBottom: 0 }}>
-          The patient sees this as the passport card on the <strong>Patient app</strong>.
-          This page is the same credential with the cryptography shown — the values the
-          circuit actually receives, and the signature over them. Nothing here is ever
+          The patient sees this as a passport card on the <strong>Patient App</strong>.
+          Here it is the same credential with the cryptography shown. None of it is ever
           transmitted.
         </p>
       </div>
@@ -40,8 +39,8 @@ export const CredentialView = ({ profile }: { profile: Profile }) => {
         <div className="card">
           <h3>Nothing to inspect</h3>
           <p className="note" style={{ marginBottom: 0 }}>
-            This record has not been signed. Until a registered issuer attests to it there
-            is no credential — sign it from the <strong>Clinic</strong> tab.
+            This record is not signed, so there is no credential yet. Sign it on the{' '}
+            <strong>Clinic</strong> tab.
           </p>
         </div>
       ) : (
@@ -49,8 +48,8 @@ export const CredentialView = ({ profile }: { profile: Profile }) => {
           <div className="card">
             <h3>The signed message</h3>
             <p className="note">
-              Six field values, in the order the circuit reads them. This vector — nothing
-              else from the document — is what the signature covers.
+              Six values, in the order the circuit reads them. The signature covers exactly
+              this vector. Nothing else in the document is signed.
             </p>
             <dl className="kv">
               {SIGNED_FIELDS.map((field, index) => (
@@ -73,8 +72,8 @@ export const CredentialView = ({ profile }: { profile: Profile }) => {
           <div className="card">
             <h3>Signature</h3>
             <p className="note">
-              Jubjub Schnorr. The circuit recomputes the challenge from the announcement,
-              the issuer key and the message above, then checks G·s = R + pk·c.
+              Jubjub Schnorr. The circuit rebuilds the challenge from the announcement, the
+              issuer key and the message above, then checks G·s = R + pk·c.
             </p>
             <dl className="kv">
               <dt>Issued by</dt>
@@ -104,9 +103,8 @@ export const CredentialView = ({ profile }: { profile: Profile }) => {
       <div className="card">
         <h3>The document</h3>
         <p className="note">
-          Only <span className="mono">history</span> is attested. The patient and issuer
-          blocks are presentation: nobody signed them and the circuit never sees them, so
-          changing them cannot invalidate anything — and cannot prove anything either.
+          Only <span className="mono">history</span> is signed. The patient and issuer
+          blocks are for display. Nobody signed them and the circuit never sees them.
         </p>
         <textarea rows={16} readOnly value={formatHealthRecord(profile.record)} />
       </div>
@@ -114,8 +112,8 @@ export const CredentialView = ({ profile }: { profile: Profile }) => {
       <div className="card">
         <h3>Enrollment secret</h3>
         <p className="note" style={{ marginBottom: 0 }}>
-          Never leaves the device. Each trial's pseudonym is derived from it together with
-          the trial id, which is what keeps enrollments unlinkable across trials.
+          Never leaves the device. Each trial gets its own pseudonym, derived from this
+          secret plus the trial id. That is what keeps enrollments unlinkable.
           <br />
           <span className="mono">{profile.userSecret.slice(0, 24)}…</span>
         </p>

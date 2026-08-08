@@ -97,8 +97,8 @@ export const ClinicView = ({ profiles, selectedId, onUpdate, onUpdateMany }: Pro
             <h2>{name}</h2>
             <p className="note" style={{ marginBottom: 0 }}>
               {rogue
-                ? 'Not in the contract’s providers set. Its signatures verify perfectly and are still refused.'
-                : 'Registered with the contract. This key is the reason a proof means anything.'}
+                ? 'Not registered with the contract. Its signatures are valid and still get refused.'
+                : 'Registered with the contract. This key is why a proof means anything.'}
             </p>
           </div>
           <label className="field">
@@ -200,9 +200,9 @@ export const ClinicView = ({ profiles, selectedId, onUpdate, onUpdateMany }: Pro
         </table>
 
         <p className="note" style={{ marginTop: 12, marginBottom: 0 }}>
-          Signing covers only the six fields the contract reads. Editing a record afterwards
-          leaves the attestation behind — it shows here as <em>record changed since
-          signing</em>, and the circuit would reject it.
+          Signing covers only the six fields the contract reads. Edit a record afterwards
+          and the signature no longer matches. It shows up here as <em>record changed since
+          signing</em>, and the circuit rejects it.
         </p>
       </div>
     </>

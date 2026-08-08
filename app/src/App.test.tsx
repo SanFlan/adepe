@@ -68,10 +68,70 @@ describe('App', () => {
     expect(options.some((text) => text?.includes('Marta Ilves'))).toBe(true);
   });
 
+  describe('patients', () => {
+    const rows = () => [...container.querySelectorAll('.roster tbody tr')];
+
+    it('lists the roster and marks who you are acting as', async () => {
+      await render();
+      await clickText('Patients');
+
+      expect(rows()).toHaveLength(2);
+      expect(container.textContent).toContain('acting as');
+      expect(rows().filter((row) => row.className.includes('is-selected'))).toHaveLength(1);
+      expect(rows()[0]!.textContent).toContain('Acting as');
+    });
+
+    it('switches who you are acting as, and the phone follows', async () => {
+      await render();
+      await clickText('Patients');
+
+      const second = rows()[1]!;
+      const name = second.querySelector('td')!.textContent!;
+      await act(async () => {
+        (second.querySelector('button') as HTMLButtonElement).click();
+      });
+
+      await clickText('Patient App');
+      expect(container.querySelector('.passport')?.textContent).toContain(
+        name.split('PT-')[0]!.trim(),
+      );
+    });
+
+    it('adds a random patient', async () => {
+      await render();
+      await clickText('Patients');
+      await clickText('+ Random patient');
+      expect(rows()).toHaveLength(3);
+    });
+
+    it('removes a patient, and never the last one', async () => {
+      await render();
+      await clickText('Patients');
+
+      const removeButtons = () =>
+        rows().map((row) => row.querySelectorAll('button')[1] as HTMLButtonElement);
+      await act(async () => removeButtons()[1]!.click());
+      expect(rows()).toHaveLength(1);
+      expect(removeButtons()[0]!.disabled).toBe(true);
+    });
+
+    it('keeps acting as somebody after removing the active patient', async () => {
+      await render();
+      await clickText('Patients');
+
+      await act(async () => {
+        (rows()[0]!.querySelectorAll('button')[1] as HTMLButtonElement).click();
+      });
+      expect(rows()).toHaveLength(1);
+      expect(rows()[0]!.className).toContain('is-selected');
+      expect(rows()[0]!.textContent).toContain('Acting as');
+    });
+  });
+
   it('warns that a fresh profile holds no credential', async () => {
     await render();
     await clickText('Trials');
-    expect(container.textContent).toContain('has not been signed yet');
+    expect(container.textContent).toContain('This record is not signed yet');
   });
 
   it('renders every tab without throwing', async () => {
@@ -82,6 +142,8 @@ describe('App', () => {
       'Record Editor',
       'Overview',
       'Patient App',
+      'Patients',
+      'Config',
       'Trials',
     ]) {
       await clickText(tab);
@@ -104,7 +166,7 @@ describe('App', () => {
     await clickText('Save & sign as Northgate Oncology');
 
     await clickText('Trials');
-    expect(container.textContent).not.toContain('has not been signed yet');
+    expect(container.textContent).not.toContain('This record is not signed yet');
 
     const cardFor = (code: string) =>
       [...container.querySelectorAll('article.trial')].find((article) =>
@@ -151,7 +213,7 @@ describe('App', () => {
 
     // Both patients, not just the one the header has selected.
     await clickText('Trials');
-    expect(container.textContent).not.toContain('has not been signed yet');
+    expect(container.textContent).not.toContain('This record is not signed yet');
   });
 
   it('marks an attestation from the unregistered issuer as untrusted', async () => {
@@ -220,7 +282,7 @@ describe('App', () => {
       const sheet = container.querySelector('.phone-sheet')!;
       expect(sheet).not.toBeNull();
       expect(sheet.textContent).toContain('You’re all set');
-      expect(sheet.textContent).toContain('We’ll contact you promptly');
+      expect(sheet.textContent).toContain('We’ll contact you shortly');
       expect(sheet.textContent).not.toMatch(/\d+ms/);
       expect(sheet.querySelector('.tick-mark')).not.toBeNull();
 
@@ -373,16 +435,20 @@ describe('App', () => {
     expect(features).toContain('popup=yes');
   });
 
-  it('reports testnet as unavailable rather than crashing', async () => {
+  it('reports preview as unavailable rather than crashing', async () => {
     await render();
-    const select = container.querySelector('select[aria-label="mode"]') as HTMLSelectElement;
-    await act(async () => {
-      select.value = 'preview';
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    await clickText('Config');
+
+    const preview = [...container.querySelectorAll('.modes .mode')].find((button) =>
+      button.textContent?.includes('Preview testnet'),
+    ) as HTMLButtonElement;
+    expect(preview).toBeDefined();
+    await act(async () => preview.click());
     await act(async () => {
       await Promise.resolve();
     });
+
     expect(container.textContent).toContain('is not available');
+    expect(container.textContent).toContain('needs a connected Lace wallet');
   });
 });

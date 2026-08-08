@@ -133,7 +133,25 @@ textarea {
   background: var(--bg);
   border: dashed 1px var(--accent);
   border-radius: 0;
-  padding: 5px 8px;
+  padding: 6px 10px;
+}
+
+/*
+ * The native arrow reserves its own gutter on top of whatever padding we set, which left a
+ * wide dead zone between the value and the chevron and made every select look oversized.
+ * Drawing the chevron ourselves puts that spacing under our control.
+ *
+ * The stroke colour is baked into the data URI — SVG backgrounds cannot read currentColor
+ * — so it has to be updated alongside --accent.
+ */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1.75 6 6.25 11 1.75' fill='none' stroke='%231884e6' stroke-width='1.75' stroke-linecap='square'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 11px 7px;
 }
 
 textarea {
@@ -221,7 +239,7 @@ textarea {
 }
 
 .field select {
-  padding: 7px 12px;
+  padding: 6px 28px 6px 11px;
   font-size: 13px;
   font-weight: 700;
   text-transform: none;
@@ -565,47 +583,56 @@ main {
   text-transform: uppercase;
 }
 
-/* ----------------------------------------------------------------- drawer */
+/* ----------------------------------------------------------------- config */
 
-.drawer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg);
-  border-top: solid 1px var(--accent);
-  z-index: 6;
-  max-height: 60vh;
+.modes {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.modes .mode {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 14px;
+  border: dashed 1px var(--accent);
 }
 
-.drawer > header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 22px;
-  cursor: pointer;
-  user-select: none;
+.modes .mode strong {
+  font-size: 14px;
 }
 
-.drawer > header .spacer {
-  flex: 1;
+.modes .mode span {
+  font-size: 12.5px;
+  color: var(--ink);
+  font-weight: 400;
 }
 
-.drawer > header:hover {
-  background: var(--fill);
+.modes .mode.is-active {
+  background: var(--accent);
+  border-style: solid;
+  color: var(--bg);
 }
 
-.drawer .body {
-  overflow: auto;
-  padding: 0 22px 18px;
+.modes .mode.is-active span {
+  color: var(--bg);
+}
+
+.modes .mode:hover span {
+  color: var(--bg);
+}
+
+.ledger-panels {
+  margin-top: 14px;
   display: grid;
-  gap: 16px;
+  gap: 18px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
-.drawer .panel h5 {
+.ledger-panels .panel h5 {
   margin: 0 0 3px;
   font-family: var(--mono);
   font-size: 12px;

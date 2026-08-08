@@ -105,9 +105,9 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
       <div className="card">
         <h2>{ISSUER_NAME}</h2>
         <p className="note">
-          A registered clinical provider. The admin added this public key to the contract's{' '}
-          <span className="mono">providers</span> set, which is the only reason a proof
-          built from its signature is worth anything.
+          A registered clinic. The admin added this key to the contract's{' '}
+          <span className="mono">providers</span> set. That is the only reason a proof built
+          on its signature counts.
         </p>
         <dl className="kv">
           <dt>Jubjub public key</dt>
@@ -124,9 +124,9 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
           </div>
         </div>
         <p className="note">
-          Only the six <span className="pill signed-badge">signed</span> fields below are
-          covered by the signature and read by the contract. Everything else in this
-          document is presentation — nobody attests to it, and the circuit never sees it.
+          The signature covers only the six <span className="pill signed-badge">signed</span>{' '}
+          fields below. Everything else is for display. Nobody attests to it and the circuit
+          never sees it.
         </p>
         <textarea
           rows={20}
@@ -138,7 +138,7 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
           <ul className="errors">
             {errors.map((error) => (
               <li key={`${error.path}:${error.message}`}>
-                <span className="mono">{error.path || '(document)'}</span> — {error.message}
+                <span className="mono">{error.path || '(document)'}</span>: {error.message}
               </li>
             ))}
           </ul>
@@ -164,12 +164,11 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
           </button>
         </div>
         <p className="note" style={{ marginTop: 10, marginBottom: 0 }}>
-          Saving alone leaves any existing attestation behind: it then covers a record that
-          no longer matches, and shows up as <em>record changed since signing</em>. That is
-          the point — a signature is over six specific values, not over “this patient”.
+          Save without signing and the old signature stays put. It now covers a record that
+          changed, so it shows up as <em>record changed since signing</em>. A signature
+          covers six specific values, not a person.
           {' '}
-          {ROGUE_NAME} is not in the contract’s providers set, so its signatures verify and
-          are still refused.
+          {ROGUE_NAME} is not registered, so its signatures are valid and still refused.
         </p>
       </div>
 
@@ -177,8 +176,8 @@ export const IssuerView = ({ profile, onIssued }: Props) => {
         <div className="card">
           <h3>The six signed fields</h3>
           <p className="note">
-            These become the <span className="mono">Vector&lt;6, Field&gt;</span> the
-            Schnorr transcript is built over. The order is fixed by the circuit.
+            These become the <span className="mono">Vector&lt;6, Field&gt;</span> that the
+            Schnorr signature covers. The circuit fixes the order.
           </p>
           <dl className="kv">
             {SIGNED_FIELDS.map((field, index) => (

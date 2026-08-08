@@ -49,14 +49,14 @@ export const TrialsView = ({ provider, profile, revision, onLedgerChange }: Prop
       <div className="card">
         <h2>Open trials</h2>
         <p className="note">
-          Eligibility is checked here on your device before anything is submitted, so this
-          page can tell you <em>why</em> you do not qualify. The contract deliberately never
-          says that — it enrolls you, or it quietly does not.
+          Your device checks eligibility before anything is sent. That is why this page can
+          say <em>why</em> you do not qualify. The contract never says why. It either
+          enrolls you or it does not.
         </p>
         {!signed ? (
           <p className="note" style={{ marginBottom: 0 }}>
-            <span className="pill warn">no credential</span> This profile's record has not
-            been signed yet. Visit the Clinic tab first.
+            <span className="pill warn">no credential</span> This record is not signed yet.
+            Sign it on the Clinic tab first.
           </p>
         ) : null}
       </div>
@@ -64,7 +64,7 @@ export const TrialsView = ({ provider, profile, revision, onLedgerChange }: Prop
       <div className="trial-rows">
         <header className="trial-head">
           <span>Trial</span>
-          <span>Criteria — hover for the requirement and your value</span>
+          <span>Criteria (hover for details)</span>
           <span>Enrolled</span>
           <span />
         </header>

@@ -6,24 +6,25 @@ import { PreviewProvider } from './providers/preview.js';
 import { BrowserZkConfigProvider } from './lib/zk-config.js';
 import { initialMode, isKiosk } from './lib/kiosk.js';
 import { MODES, type Mode, type TrialsProvider } from './providers/types.js';
-import {
-  ARCHETYPES,
-  clearProfiles,
-  loadProfiles,
-  profileFromArchetype,
-  randomProfile,
-  saveProfiles,
-  type Profile,
-} from './lib/profiles.js';
+import { clearProfiles, loadProfiles, saveProfiles, type Profile } from './lib/profiles.js';
 import { IssuerView } from './views/IssuerView.js';
 import { ClinicView } from './views/ClinicView.js';
+import { PatientsView } from './views/PatientsView.js';
 import { MobileView } from './views/MobileView.js';
 import { TrialsView } from './views/TrialsView.js';
 import { CredentialView } from './views/CredentialView.js';
 import { OverviewView } from './views/OverviewView.js';
-import { LedgerDrawer } from './views/LedgerDrawer.js';
+import { ConfigView } from './views/ConfigView.js';
 
-type Tab = 'overview' | 'phone' | 'trials' | 'credential' | 'clinic' | 'issuer';
+type Tab =
+  | 'overview'
+  | 'phone'
+  | 'trials'
+  | 'credential'
+  | 'clinic'
+  | 'issuer'
+  | 'patients'
+  | 'config';
 
 const TABS: ReadonlyArray<[Tab, string]> = [
   ['overview', 'Overview'],
@@ -34,6 +35,9 @@ const TABS: ReadonlyArray<[Tab, string]> = [
   // Named for what it does rather than who does it: "Issuer" alongside "Clinic" reads as
   // two names for the same thing.
   ['issuer', 'Record Editor'],
+  // Last two, because they are simulator scaffolding rather than part of the story.
+  ['patients', 'Patients'],
+  ['config', 'Config'],
 ];
 
 const DEFAULT_TAB: Tab = 'overview';
@@ -165,11 +169,14 @@ export const App = () => {
     [persist, profiles],
   );
 
-  const removeSelected = useCallback(() => {
-    if (selected === null) return;
-    const next = profiles.filter((profile) => profile.id !== selected.id);
-    persist(next, next[0]?.id ?? null);
-  }, [persist, profiles, selected]);
+  const removeProfile = useCallback(
+    (target: Profile) => {
+      const next = profiles.filter((profile) => profile.id !== target.id);
+      // Removing whoever you were acting as has to leave you acting as somebody.
+      persist(next, target.id === selectedId ? (next[0]?.id ?? null) : selectedId);
+    },
+    [persist, profiles, selectedId],
+  );
 
   const resetAll = useCallback(async () => {
     clearProfiles();
@@ -204,7 +211,7 @@ export const App = () => {
     <>
       <div className="topbar">
         <div className="brand">
-          ADEPE<span>private clinical-trial eligibility on Midnight</span>
+          ADEPE<span>privacy preserving clinical trial eligibility</span>
         </div>
         <div className="spacer" />
 
@@ -219,42 +226,6 @@ export const App = () => {
               <option key={profile.id} value={profile.id}>
                 {profile.displayName}
                 {profile.credential === null ? ' (unsigned)' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button onClick={() => addProfile(randomProfile())}>+ random</button>
-        <select
-          value=""
-          onChange={(event) => {
-            const archetype = ARCHETYPES[Number(event.target.value)];
-            if (archetype !== undefined) addProfile(profileFromArchetype(archetype));
-          }}
-        >
-          <option value="">+ archetype…</option>
-          {ARCHETYPES.map((archetype, index) => (
-            <option key={archetype.displayName} value={index}>
-              {archetype.displayName} — {archetype.note}
-            </option>
-          ))}
-        </select>
-        <button onClick={removeSelected} disabled={profiles.length < 2}>
-          remove
-        </button>
-
-        {/* Last cell, so it takes the filled block: the mode is the most consequential
-            thing on this bar and reads like a status. */}
-        <label className="field">
-          mode
-          <select
-            aria-label="mode"
-            value={mode}
-            onChange={(event) => setMode(event.target.value as Mode)}
-          >
-            {MODES.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.label}
               </option>
             ))}
           </select>
@@ -301,6 +272,22 @@ export const App = () => {
           />
         ) : tab === 'credential' ? (
           <CredentialView profile={selected} />
+        ) : tab === 'config' ? (
+          <ConfigView
+            provider={provider}
+            mode={mode}
+            onModeChange={setMode}
+            revision={revision}
+            onReset={() => void resetAll()}
+          />
+        ) : tab === 'patients' ? (
+          <PatientsView
+            profiles={profiles}
+            selectedId={selectedId}
+            onSelect={(id) => persist(profiles, id)}
+            onAdd={addProfile}
+            onRemove={removeProfile}
+          />
         ) : tab === 'clinic' ? (
           <ClinicView
             profiles={profiles}
@@ -315,13 +302,6 @@ export const App = () => {
         )}
       </main>
 
-      {provider === null ? null : (
-        <LedgerDrawer
-          provider={provider}
-          revision={revision}
-          onReset={() => void resetAll()}
-        />
-      )}
     </>
   );
 };

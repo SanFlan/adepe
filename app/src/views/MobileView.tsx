@@ -29,15 +29,13 @@ import { openPhoneWindow } from '../lib/kiosk.js';
  */
 const PATIENT_MESSAGE: Record<EnrollOutcome, string> = {
   enrolled:
-    'Success — your proof has been submitted. We’ll contact you promptly to continue with the trial process.',
-  'already-enrolled': 'You already hold a place in this trial. We’ll be in touch.',
-  ineligible:
-    'This study isn’t a match for your record. Nothing about you was shared.',
+    'Your proof has been submitted. We’ll contact you shortly to continue with the trial process.',
+  'already-enrolled': 'You already have a place in this trial. We’ll be in touch.',
+  ineligible: 'This study is not a match for your record. Nothing about you was shared.',
   'untrusted-issuer':
-    'This study doesn’t recognise the clinic that signed your record. Ask your clinic to issue it again.',
-  'no-credential':
-    'Your record hasn’t been signed by your clinic yet, so there’s nothing to prove.',
-  error: 'Something went wrong submitting your application. Please try again.',
+    'This study does not recognise the clinic that signed your record. Ask your clinic to issue it again.',
+  'no-credential': 'Your clinic has not signed your record yet, so there is nothing to prove.',
+  error: 'Something went wrong sending your application. Please try again.',
 };
 
 interface Props {
@@ -204,22 +202,22 @@ export const MobileView = ({
           Open as a standalone app ↗
         </button>
         <p className="note" style={{ marginTop: 10 }}>
-          Opens a chromeless window with no address bar, sized to the screen. It follows
-          the patient you pick here. In <strong>Mocked</strong> mode it also shares the
-          ledger; the other modes keep theirs in memory, so the popup runs its own.
+          Opens a window with no address bar, sized to your screen. It follows the patient
+          you pick here. In <strong>Mocked</strong> mode it shares the ledger too. Other
+          modes keep the ledger in memory, so the popup runs its own.
         </p>
         <h3>What the phone is really doing</h3>
         <p className="note">
-          This is not a mockup. Tapping Apply runs the same provider as the desktop Trials
-          tab — in <strong>Local proofs</strong> mode that spinner is a proof server
-          working, and the enrolment lands in the Overview and the ledger drawer.
+          Not a mockup. Apply runs the same code as the desktop Trials tab. In{' '}
+          <strong>Local proofs</strong> mode that spinner is a real proof server, and the
+          enrollment lands in Overview and the ledger drawer.
         </p>
         <p className="note">
-          The record itself never moves. What leaves the device is a proof that the six
-          attested fields satisfy a trial's criteria, plus which trial was applied to.
+          The record never moves. What leaves the device is a proof that the six signed
+          fields meet the trial's criteria, plus which trial was applied to.
         </p>
         <p className="note">
-          Switch patients and modes from the bar at the top — those controls belong to the
+          Switch patients and modes from the bar at the top. Those controls belong to the
           simulator, not to the patient.
         </p>
       </aside>
@@ -243,7 +241,7 @@ const Home = ({
 }) => (
   <>
     <h1 className="phone-h1">Hello, {firstName(profile.displayName)}</h1>
-    <p className="phone-sub">Your health record lives on this phone. Nowhere else.</p>
+    <p className="phone-sub">Your health record stays on this phone.</p>
 
     <section className={`passport ${usable ? 'is-valid' : 'is-invalid'}`}>
       <header>
@@ -265,8 +263,8 @@ const Home = ({
 
     {!usable ? (
       <div className="phone-callout">
-        Your clinic needs to attest to your record before you can apply to anything. In this
-        simulator, do that from the <strong>Clinic</strong> tab.
+        Your clinic needs to sign your record before you can apply. In this simulator, do
+        that on the <strong>Clinic</strong> tab.
       </div>
     ) : (
       <div className="phone-callout is-quiet">
@@ -289,7 +287,7 @@ const TrialList = ({
 }) => (
   <>
     <h1 className="phone-h1">Trials</h1>
-    <p className="phone-sub">Checked against your record, on this device.</p>
+    <p className="phone-sub">Matched against your record, on this device.</p>
     {trials.map(({ trial }) => {
       const eligible = isEligible(trial.criteria, history);
       const already = isEnrolled(trial.id);
@@ -372,9 +370,7 @@ const TrialDetail = ({
           </li>
         ))}
       </ul>
-      <p className="phone-fineprint">
-        Checked on your phone. None of this was sent anywhere.
-      </p>
+      <p className="phone-fineprint">Checked on your phone. Nothing was sent.</p>
 
       {result !== undefined && result.outcome !== 'enrolled' ? (
         <div className="phone-result bad">{PATIENT_MESSAGE[result.outcome]}</div>
@@ -425,8 +421,8 @@ const SubmittedSheet = ({ trial, onDone }: { trial: Trial; onDone: () => void })
     </div>
 
     <p className="phone-sheet-fine">
-      Your medical record stayed on this phone. The study received a proof that you
-      qualify — not your history.
+      Your record stayed on this phone. The study received a proof that you qualify, not
+      your medical history.
     </p>
 
     <button className="phone-cta" onClick={onDone}>
@@ -458,8 +454,8 @@ const Applications = ({ entries }: { entries: readonly TrialState[] }) => (
           </div>
         ))}
         <div className="phone-callout is-quiet">
-          Each place is held under a different pseudonym, so nobody can tell these are the
-          same person.
+          Each place uses a different pseudonym, so nobody can tell these are the same
+          person.
         </div>
       </>
     )}
