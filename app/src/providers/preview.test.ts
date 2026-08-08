@@ -27,11 +27,19 @@ const install = (wallets: Record<string, Partial<FakeWallet>> | undefined) => {
 };
 
 /** A wallet that connects and reports whatever configuration the test asks for. */
-const walletReporting = (config: Record<string, unknown>, apiVersion = '4.0.0') => ({
+const walletReporting = (
+  config: Record<string, unknown>,
+  apiVersion = '4.0.0',
+  dust: { cap: bigint; balance: bigint } | null = { cap: 100n, balance: 100n },
+) => ({
   lace: {
     apiVersion,
     connect: vi.fn(async () => ({
       getConfiguration: async () => config,
+      getDustBalance: async () => {
+        if (dust === null) throw new Error('unsupported');
+        return dust;
+      },
       getShieldedAddresses: async () => ({
         shieldedCoinPublicKey: 'coin',
         shieldedEncryptionPublicKey: 'enc',
@@ -39,6 +47,13 @@ const walletReporting = (config: Record<string, unknown>, apiVersion = '4.0.0') 
     })),
   },
 });
+
+const workingConfig = {
+  networkId: 'preview',
+  indexerUri: 'https://indexer.example/graphql',
+  indexerWsUri: 'wss://indexer.example/graphql/ws',
+  proverServerUri: 'http://127.0.0.1:6300',
+};
 
 afterEach(() => install(undefined));
 
@@ -90,6 +105,22 @@ describe('preview provider', () => {
 
     expect(provider.status().ready).toBe(false);
     expect(provider.status().detail).toContain('proof server');
+  });
+
+  /**
+   * NIGHT is not DUST. Fees are paid in DUST, which registered NIGHT generates, so a
+   * wallet can hold plenty of tNIGHT and still be unable to pay. Left unchecked this
+   * surfaces at *balancing* — after the proof is built and the password is typed — as an
+   * Effect FiberFailure with an empty message.
+   */
+  it('refuses when the wallet holds no DUST, before anything is proved', async () => {
+    install(walletReporting(workingConfig, '4.0.0', { cap: 5000n, balance: 0n }));
+    const provider = new PreviewProvider();
+    await provider.init();
+
+    expect(provider.status().ready).toBe(false);
+    expect(provider.status().detail).toContain('no DUST');
+    expect(provider.status().detail).toContain('register');
   });
 
   it('surfaces a rejected connection instead of throwing', async () => {
